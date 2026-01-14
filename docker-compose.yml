@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hungrybuy-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pghungrybuy:/var/lib/postgresql/data/
+  
+  server:
+    build:
+      context: ./server
+    container_name: hungrybuy-server
+    env_file:
+      - ./server/.env
+    depends_on:
+      - postgres
+    ports:
+      - "5000:5000"
+  
+  client:
+    build:
+      context: ./client
+    container_name: hungrybuy-client
+    env_file:
+      - ./client/.env
+    depends_on:
+      - server
+    ports:
+      - "3000:3000"
+
+volumes:
+  pghungrybuy:
