@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@theme {
+  /* Define your custom colors here */
+  --color-brand-red: #E83B2E;
+  --color-brand-bg: #F5F5F7;
+  --color-brand-dark: #1A1A1A;
+  --color-brand-gray: #888888;
+  
+  /* You can also define border radius if you want specific names, 
+     but default rounded-2xl/3xl works fine. */
+}
+
+/* Global Styles */
+body {
+  background-color: var(--color-brand-bg);
+  color: var(--color-brand-dark);
+  font-family: system-ui, sans-serif; /* or your Google Font */
+}
