@@ -35,3 +35,4 @@ services:
 
 volumes:
   pghungrybuy:
+    name: hungrybuy
