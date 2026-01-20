@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 
+import authRoutes from "./routes/auth.route";
+
 dotenv.config();
 
 export function startServer() {
@@ -10,7 +12,7 @@ export function startServer() {
 
   app.use("/health", (_, res) => res.send("OK"));
 
-  app.use("/auth", require("../routes/auth.route"));
+  app.use("/auth", authRoutes);
 
   const PORT = Number(process.env.PORT) || 5000;
   app.listen(PORT, () => {

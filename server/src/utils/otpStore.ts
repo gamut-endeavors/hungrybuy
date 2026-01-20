@@ -28,10 +28,6 @@ export function saveOtp(phone: string, otp: string) {
   const expiresAt = Date.now() + OTP_EXPIRY;
 
   otpStore.set(phone, { otp, expiresAt, tries: 0 });
-
-  // setTimeout(() => {
-  //   otpStore.delete(phone);
-  // }, OTP_EXPIRY);
 }
 
 export function verifyOtp(phone: string, otp: string): boolean {

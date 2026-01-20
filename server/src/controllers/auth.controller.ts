@@ -46,7 +46,7 @@ export async function registerUser(req: Request, res: Response) {
     });
 
     return res.status(201).json({
-      message: "User created succesfully",
+      message: "User created successfully",
       data: { user: { name: newUser.name, phone: newUser.phone } },
     });
   } catch (error) {
@@ -85,7 +85,7 @@ export async function loginUser(req: Request, res: Response) {
     }
 
     return res.status(200).json({
-      message: "Login succesful",
+      message: "Login successful",
       data: { user: { name: user.name, phone: user.phone } },
     });
   } catch (error) {

@@ -10,7 +10,7 @@ export async function sendOtp(req: Request, res: Response) {
     }
 
     // -- -- -- -- -- rate limit otp -- -- -- -- --
-    if (!canRequestOtp) {
+    if (!canRequestOtp(phone)) {
       return res.status(429).json({ message: "Too many requests" });
     }
 
@@ -19,7 +19,7 @@ export async function sendOtp(req: Request, res: Response) {
     saveOtp(phone, otp);
 
     // -- -- -- -- -- send otp -- -- -- -- --
-    return res.status(200).json({ message: "OTP sent succesfully" });
+    return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.log("AUTH_SEND_OTP_ERROR:", error);
     return res.status(500).json({ message: "Internal Server Error" });
