@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { verifyOtp } from "../utils/otpStore";
 
-export default async function registerUser(req: Request, res: Response) {
+export async function registerUser(req: Request, res: Response) {
   try {
     const { name, phone, otp } = req.body;
 
@@ -17,7 +17,7 @@ export default async function registerUser(req: Request, res: Response) {
     }
 
     if (verifyOtp(phone, otp) === false) {
-      return res.status(400).json({ message: "Invalid OTP" });
+      return res.status(401).json({ message: "Invalid OTP" });
     }
 
     // -- -- -- -- -- check if user exists -- -- -- -- --
@@ -50,7 +50,46 @@ export default async function registerUser(req: Request, res: Response) {
       data: { user: { name: newUser.name, phone: newUser.phone } },
     });
   } catch (error) {
-    console.log("AUTH_REGISTER_ERROR:" + error);
+    console.log("AUTH_REGISTER_ERROR:", error);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function loginUser(req: Request, res: Response) {
+  try {
+    const { phone, otp } = req.body;
+
+    // -- -- -- -- -- validate phone -- -- -- -- --
+    if (!phone) {
+      return res.status(400).json({ message: "Phone is required" });
+    }
+
+    // -- -- -- -- -- validate otp -- -- -- -- --
+    if (!otp) {
+      return res.status(400).json({ message: "OTP is required" });
+    }
+
+    if (verifyOtp(phone, otp) === false) {
+      return res.status(401).json({ message: "Invalid OTP" });
+    }
+
+    // -- -- -- -- -- check if user exists -- -- -- -- --
+    const user = await prisma.user.findUnique({
+      where: {
+        phone,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not registered" });
+    }
+
+    return res.status(200).json({
+      message: "Login succesful",
+      data: { user: { name: user.name, phone: user.phone } },
+    });
+  } catch (error) {
+    console.log("AUTH_LOGIN_ERROR:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 }
