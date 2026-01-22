@@ -34,3 +34,21 @@ export async function createCategory(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function getAllCategories(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Fetched all categories", data: { categories } });
+  } catch (error) {
+    console.log("CATEGORY_GET_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
