@@ -41,6 +41,36 @@ export async function adminLogin(req: Request, res: Response) {
   }
 }
 
+export async function getAllShops(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userRole = req.headers["x-user-role"];
+
+    if (!userRole || userRole !== "ADMIN") {
+      return res.status(401).json({ message: "Forbidden" });
+    }
+
+    const shops = await prisma.user.findMany({
+      where: {
+        role: "SHOP",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Shops fetched successfully",
+      data: { shops },
+    });
+  } catch (error) {
+    console.log("GET_SHOP_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export async function createShop(req: AuthenticatedRequest, res: Response) {
   try {
     const userRole = req.headers["x-user-role"];
