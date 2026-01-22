@@ -42,7 +42,7 @@ services:
     depends_on:
       - server
     ports:
-      - "8000:8000"
+      - "8000:3000"
 
 volumes:
   pghungrybuy:
