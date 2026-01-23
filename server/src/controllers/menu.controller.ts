@@ -159,3 +159,29 @@ export async function createVariant(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function getAllVariants(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userRole = req.headers["x-user-role"];
+    if (userRole !== "ADMIN" && userRole !== "SHOP") {
+      return res.status(401).json({ message: "Forbidden" });
+    }
+
+    const { menuItemId } = req.params;
+    if (!menuItemId || Array.isArray(menuItemId)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+
+    const variants = await prisma.menuVariant.findMany({
+      where: { menuItemId },
+      orderBy: { price: "asc" },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Fetched all variants", data: { variants } });
+  } catch (error) {
+    console.log("GET_VARIANTS_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
