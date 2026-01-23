@@ -1,7 +1,6 @@
 import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { AuthenticatedRequest } from "../types/auth";
-import { FoodType } from "@prisma/client";
 
 export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
   try {
@@ -111,6 +110,52 @@ export async function deleteMenuItem(req: AuthenticatedRequest, res: Response) {
     return res.status(200).json({ message: "Deleted successfully" });
   } catch (error) {
     console.log("DELETE_MENU_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function createVariant(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userRole = req.headers["x-user-role"];
+    if (userRole !== "ADMIN" && userRole !== "SHOP") {
+      return res.status(401).json({ message: "Forbidden" });
+    }
+
+    const { menuItemId } = req.params;
+    if (!menuItemId || Array.isArray(menuItemId)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+
+    const { label, price } = req.body;
+    if (!label || !price) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const variant = await prisma.menuVariant.findFirst({
+      where: {
+        menuItemId,
+        label,
+      },
+    });
+
+    if (variant) {
+      return res.status(409).json({ message: "Variant already exists" });
+    }
+
+    const newVariant = await prisma.menuVariant.create({
+      data: {
+        label,
+        price: Number(price),
+        menuItemId,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Variant created successfully",
+      data: { variant: newVariant },
+    });
+  } catch (error) {
+    console.log("CREATE_VARIANT_ERROR", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
