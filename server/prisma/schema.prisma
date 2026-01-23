@@ -54,15 +54,32 @@ model MenuItem {
   name        String
   description String?
   foodType    FoodType
-  price       Int
+  price       Int?
   isAvailable Boolean  @default(true)
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
+
+  variants MenuVariant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([categoryId])
   @@index([foodType])
+}
+
+model MenuVariant {
+  id    String @id @default(uuid())
+  label String
+  price Int
+
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAT DateTime @updatedAt
+
+  @@unique([menuItemId, label])
+  @@index([menuItemId])
 }
