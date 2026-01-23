@@ -58,3 +58,39 @@ export async function getMenu(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function updateMenuItem(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userRole = req.headers["x-user-role"];
+    if (userRole !== "ADMIN" && userRole !== "SHOP") {
+      return res.status(500).json({ message: "Forbidden" });
+    }
+
+    const { id } = req.params;
+    if (!id || Array.isArray(id)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+
+    const { name, description, price, foodType, categoryId, isAvailable } =
+      req.body;
+
+    const updatedItem = await prisma.menuItem.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(price !== undefined && { price: Number(price) }),
+        ...(foodType !== undefined && { foodType }),
+        ...(categoryId !== undefined && { categoryId }),
+        ...(isAvailable !== undefined && { isAvailable }),
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Updated successfully", data: { item: updatedItem } });
+  } catch (error) {
+    console.log("UPDATE_MENU_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
