@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@theme {
+  /* Define your custom colors here */
+  --color-brand-red: #E83B2E;
+  --color-brand-bg: #F5F5F7;
+  --color-brand-dark: #1A1A1A;
+  --color-brand-gray: #888888;
+}
