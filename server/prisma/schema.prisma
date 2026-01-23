@@ -75,7 +75,7 @@ model MenuVariant {
   price Int
 
   menuItemId String
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAT DateTime @updatedAt

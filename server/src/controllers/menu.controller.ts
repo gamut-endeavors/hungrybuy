@@ -10,15 +10,15 @@ export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
     }
 
     const { name, price, foodType, categoryId, description } = req.body;
-    if (!name || !price || !foodType || !categoryId) {
+    if (!name || !foodType || !categoryId) {
       return res.status(400).json({ message: "Missing required " });
     }
 
     const item = await prisma.menuItem.create({
       data: {
         name,
-        description: description || "",
-        price: Number(price),
+        description: description ?? "",
+        price: price !== undefined ? Number(price) : null,
         foodType,
         categoryId,
       },
@@ -46,7 +46,7 @@ export async function getMenu(req: AuthenticatedRequest, res: Response) {
           name: { contains: String(search).trim(), mode: "insensitive" },
         }),
       },
-      include: { category: true },
+      include: { category: true, variants: true },
     });
 
     return res
