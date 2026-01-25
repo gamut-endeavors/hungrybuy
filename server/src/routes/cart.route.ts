@@ -14,4 +14,3 @@ router.patch("/:cartId", updateCart);
 router.delete("/:cartId", deleteCartItem);
 
 export default router;
-deleteCart
