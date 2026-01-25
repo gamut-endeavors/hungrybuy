@@ -109,3 +109,21 @@ export async function updateCart(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function deleteCartItem(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { cartId } = req.params;
+    if (!cartId || Array.isArray(cartId)) {
+      return res.status(400).json({ message: "Invalid cart ID" });
+    }
+
+    await prisma.cartItem.delete({
+      where: { id: cartId },
+    });
+
+    return res.status(200).json({ message: "Deleted successfully" });
+  } catch (error) {
+    console.log("DELETE_CART_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
