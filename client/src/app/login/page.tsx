@@ -69,7 +69,7 @@ export default function LoginPage() {
       const { token, data } = res.data;
       login(token, data.user);
 
-      toast.success("Welcome back!");
+      toast.success("Login Successful!");
       router.push('/');
 
     } catch (error: any) {
@@ -124,6 +124,17 @@ export default function LoginPage() {
 // 1. Phone Step
 function PhoneStep({ onNext, custom, isLoading }: { onNext: (phone: string) => void, custom: number, isLoading: boolean }) {
   const [phone, setPhone] = useState('');
+  
+  // 1. Create a Ref for the input
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+
+  // 2. Focus on mount (with small delay for animation)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      phoneInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +143,7 @@ function PhoneStep({ onNext, custom, isLoading }: { onNext: (phone: string) => v
 
   return (
     <motion.div
-      className="flex flex-col h-full p-6 md:p-8 absolute inset-0 bg-brand-bg"
+      className="flex flex-col h-full p-6 md:p-8 absolute inset-0 bg-brand-bg" 
       custom={custom}
       variants={slideVariants}
       initial="enter"
@@ -141,7 +152,7 @@ function PhoneStep({ onNext, custom, isLoading }: { onNext: (phone: string) => v
       transition={transitionSpec}
     >
       <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col">
-        {/* ... (Your existing Image/Header UI code here is fine) ... */}
+        {/* ... (Images and Header - Unchanged) ... */}
         <div className="flex justify-center mt-6 mb-6 md:mt-10 md:mb-8 relative shrink-0">
           <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden relative z-10 p-1">
             <img src="/images/burgers.jpeg" alt="Burger" className="w-full h-full object-cover rounded-full" />
@@ -160,18 +171,15 @@ function PhoneStep({ onNext, custom, isLoading }: { onNext: (phone: string) => v
           <label className="text-brand-dark font-semibold text-sm mb-2 ml-1">Phone Number</label>
           <div className="relative flex items-center mb-6">
             <input
+              ref={phoneInputRef} // 3. Attach the Ref here
               type="tel"
               placeholder="000-000-0000"
-              maxLength={10} // Native limit
+              maxLength={10} 
               className="w-full bg-white rounded-2xl py-4 px-4 shadow-sm text-center text-lg font-medium text-brand-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-200"
               value={phone}
               onChange={(e) => {
-                // 1. Remove any non-number characters
                 const onlyNums = e.target.value.replace(/[^0-9]/g, '');
-                // 2. Only update if length is 10 or less
-                if (onlyNums.length <= 10) {
-                  setPhone(onlyNums);
-                }
+                if (onlyNums.length <= 10) setPhone(onlyNums);
               }}
               disabled={isLoading}
             />
@@ -197,22 +205,32 @@ function PhoneStep({ onNext, custom, isLoading }: { onNext: (phone: string) => v
 
 // 2. OTP Step
 function OtpStep({ phoneNumber, onBack, onVerify, custom, isLoading }: { phoneNumber: string, onBack: () => void, onVerify: (otp: string) => void, custom: number, isLoading: boolean }) {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']); // Changed to 6 digits (Backend Standard)
+  const [otp, setOtp] = useState(['', '', '', '', '', '']); 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [timer, setTimer] = useState(45);
 
+  // 1. Existing Timer Logic
   useEffect(() => {
     const interval = setInterval(() => setTimer((prev) => (prev > 0 ? prev - 1 : 0)), 1000);
     return () => clearInterval(interval);
   }, []);
 
+  // 2. NEW: Focus first input on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ... (Rest of logic: handleChange, handleKeyDown, handleSubmit is Unchanged) ...
   const handleChange = (index: number, e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (isNaN(Number(value))) return;
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
-    if (value && index < 5) inputRefs.current[index + 1]?.focus(); // Updated index check for 6 digits
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
@@ -246,7 +264,7 @@ function OtpStep({ phoneNumber, onBack, onVerify, custom, isLoading }: { phoneNu
           <h2 className="text-brand-dark font-bold text-lg">Verification</h2>
           <div className="w-10"></div>
         </div>
-
+        
         <div className="flex justify-center mb-6 shrink-0">
           <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center">
             <div className="bg-red-50 p-4 rounded-full">
@@ -273,14 +291,13 @@ function OtpStep({ phoneNumber, onBack, onVerify, custom, isLoading }: { phoneNu
                 value={digit}
                 onChange={(e) => handleChange(index, e)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                // Adjusted sizing for 6 digits
                 className="w-10 h-12 md:w-14 md:h-14 bg-white rounded-xl shadow-sm text-center text-xl font-bold text-brand-dark focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white transition-all"
                 disabled={isLoading}
               />
             ))}
           </div>
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             disabled={isLoading || otp.join('').length < 6}
             className="w-full bg-brand-red text-white rounded-2xl py-4 font-bold text-lg shadow-lg shadow-red-200 active:scale-95 transition-transform disabled:opacity-70 disabled:scale-100 flex justify-center"
           >
