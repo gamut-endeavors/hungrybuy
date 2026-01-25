@@ -10,7 +10,7 @@ export async function addToCart(req: AuthenticatedRequest, res: Response) {
     }
 
     const { menuItemId, variantId, quantity } = req.body;
-    if (!menuItemId || !variantId || !quantity || quantity < 0) {
+    if (!menuItemId || !quantity || quantity < 0) {
       return res.status(400).json({ message: "Invalid input" });
     }
 
@@ -75,6 +75,37 @@ export async function getCart(req: AuthenticatedRequest, res: Response) {
       .json({ messaage: "fetched cart successfully", data: { cart } });
   } catch (error) {
     console.log("GET_CART_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
+export async function updateCart(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { cartId } = req.params;
+    if (!cartId || Array.isArray(cartId)) {
+      return res.status(400).json({ message: "Invalid table ID" });
+    }
+
+    const { quantity } = req.body;
+    if (!Number.isInteger(quantity) || quantity < 0) {
+      return res.status(400).json({ message: "Invalid quantity" });
+    }
+
+    if (quantity === 0) {
+      await prisma.cartItem.delete({ where: { id: cartId } });
+      return res.status(200).json({ message: "Deleted successfully" });
+    }
+
+    const updatedCart = await prisma.cartItem.update({
+      where: { id: cartId },
+      data: { quantity },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Updated successfully", data: { cart: updatedCart } });
+  } catch (error) {
+    console.log("UPDATE_CART_ERROR", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
