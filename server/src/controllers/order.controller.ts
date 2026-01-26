@@ -57,3 +57,30 @@ export async function createOrder(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function getAllOrders(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userRole = req.headers["x-user-role"];
+    if (userRole !== "ADMIN" && userRole !== "SHOP") {
+      return res.status(401).json({ message: "Forbidden" });
+    }
+
+    const orders = await prisma.order.findMany({
+      include: {
+        items: {
+          include: {
+            menuItem: true,
+            variant: true,
+          },
+        },
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Fetched all orders", data: { orders } });
+  } catch (error) {
+    console.log("GET_ORDERS_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
