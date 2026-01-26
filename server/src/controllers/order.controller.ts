@@ -84,3 +84,46 @@ export async function getAllOrders(req: AuthenticatedRequest, res: Response) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function updateOrderStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  try {
+    const userRole = req.headers["x-user-role"];
+    if (userRole !== "ADMIN" && userRole !== "SHOP") {
+      return res.status(401).json({ message: "Forbidden" });
+    }
+
+    const { orderId } = req.params;
+    if (!orderId || Array.isArray(orderId)) {
+      return res.status(400).json({ message: "Invalid order ID" });
+    }
+
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+      include: {
+        items: {
+          include: {
+            menuItem: true,
+            variant: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: "Status updated successfully",
+      data: { order: updatedOrder },
+    });
+  } catch (error) {
+    console.log("UPDATE_ORDER_STATUS_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
