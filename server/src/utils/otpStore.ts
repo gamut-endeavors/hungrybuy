@@ -48,7 +48,8 @@ export function verifyOtp(phone: string, otp: string): boolean {
     data.tries++;
     return false;
   }
-  
+
+  otpStore.delete(phone);
   return true;
 }
 

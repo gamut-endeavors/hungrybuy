@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
+import { CartProvider } from "@/context/CartContext";
 
 // Configure the font
 const poppins = Poppins({ 
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className={poppins.className}>
         {/* WRAP CHILDREN IN AUTHPROVIDER */}
         <AuthProvider>
+          <CartProvider>
           {children}
           <Toaster position="top-center" /> {/* This shows the success/error popups */}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

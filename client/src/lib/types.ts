@@ -5,8 +5,9 @@ export interface Category {
   color?: string; // For the circle bg
 }
 
-export interface ProductSize {
-  name: string;
+export interface Variant {
+  id: string;
+  label: string; // Matches DB
   price: number;
 }
 
@@ -14,11 +15,13 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number; // This acts as the "Base Price" or default
-  rating: number;
-  image: string;
-  qty: number;
-  sizes?: ProductSize[]; // UPDATED: Now an array of objects
-  category: 'veg' | 'non-veg',
+  price: number;       // Now this expects Integers (cents) from DB
+  foodType: 'VEG' | 'NON_VEG'; // Matches DB Enum
   categoryId: string;
+  variants: Variant[]; // Matches DB relation name
+  
+  // These fields are NOT in DB yet, so we make them optional or handle them
+  image?: string; 
+  rating?: number;
+  qty?: number;
 }

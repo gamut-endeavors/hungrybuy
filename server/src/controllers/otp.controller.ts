@@ -16,7 +16,6 @@ export async function sendOtp(req: Request, res: Response) {
 
     // -- -- -- -- -- generate otp -- -- -- -- --
     const otp = generateOtp();
-    console.log(otp)
     saveOtp(phone, otp);
 
     // -- -- -- -- -- send otp -- -- -- -- --
