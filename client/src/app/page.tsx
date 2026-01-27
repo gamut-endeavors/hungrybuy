@@ -6,138 +6,164 @@ import CategoryItem from '@/components/cards/CategoryItem';
 import ProductCard from '@/components/cards/ProductCard';
 import ProductDialog from '@/components/ui/ProductDialog';
 import DietFilter from '@/components/ui/DietFilter';
-import CartPage from '@/components/ui/CartPage'; // <--- Import New Component
-import { CATEGORIES, PRODUCTS } from '@/lib/constants';
+import CartPage from '@/components/ui/CartPage'; 
+import TestTableSetter from '@/components/other/TestTableSetter'; 
+import { CATEGORIES } from '@/lib/constants'; 
 import { Product } from '@/lib/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; 
+import { useCart } from '@/context/CartContext'; 
+import { api } from '@/lib/api'; 
 
 export default function Home() {
   const [dietFilter, setDietFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [cartDetails, setCartDetails] = useState<Record<string, Record<string, number>>>({});
+  
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
+
+  // Global Cart State
+  const { cart, addToCart, updateQuantity, tableId } = useCart();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
-  // --- NEW: View State ---
   const [currentView, setCurrentView] = useState<'HOME' | 'CART'>('HOME');
 
-  // --- Helper: Get Total Count for Badge ---
+  // --- 1. Simplified Fetch (Matches Backend Directly) ---
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await api.get('/menu');
+        // Backend returns: { data: { menu: [...] } } or { data: [...] }
+        const dbProducts = res.data.data.menu || res.data.data;
+        
+        // Just add the fields missing from DB (image, qty)
+        const readyProducts = dbProducts.map((p: any) => ({
+            ...p,
+            image: '/images/burgers.jpeg', // Default image until DB has them
+            qty: 0
+        }));
+
+        setProducts(readyProducts);
+      } catch (error) {
+        console.error("Failed to load menu", error);
+      } finally {
+        setIsMenuLoading(false);
+      }
+    };
+
+    fetchMenu();
+  }, []);
+
+  // --- Helpers ---
   const getTotalCartCount = () => {
-    let count = 0;
-    Object.values(cartDetails).forEach(sizes => {
-      Object.values(sizes).forEach(qty => count += qty);
-    });
-    return count;
+    return cart.reduce((acc, item) => acc + item.quantity, 0);
   };
 
   const getProductTotalQty = (productId: string) => {
-    const details = cartDetails[productId];
-    if (!details) return 0;
-    return Object.values(details).reduce((sum, qty) => sum + qty, 0);
+    return cart
+      .filter(item => item.menuItem.id === productId)
+      .reduce((acc, item) => acc + item.quantity, 0);
   };
 
-  const increaseSingleItem = (id: string) => {
-    setCartDetails(prev => ({
-      ...prev,
-      [id]: { ...prev[id], "default": (prev[id]?.["default"] || 0) + 1 }
-    }));
+  const findCartItem = (productId: string, variantId?: string) => {
+    return cart.find(item => 
+      item.menuItem.id === productId && 
+      (variantId ? item.variant?.id === variantId : !item.variant)
+    );
   };
 
-  const decreaseSingleItem = (id: string) => {
-    setCartDetails(prev => {
-      const currentQty = prev[id]?.["default"] || 0;
-      if (currentQty <= 1) {
-        const copy = { ...prev };
-        delete copy[id];
-        return copy;
-      }
-      return { ...prev, [id]: { ...prev[id], "default": currentQty - 1 } };
-    });
+  // --- Event Handlers ---
+  const increaseSingleItem = async (product: Product) => {
+    await addToCart(product.id, 1);
   };
 
-  // --- NEW: Handle Size Increase/Decrease from Cart ---
-  const handleCartIncrease = (id: string, size: string) => {
-    setCartDetails(prev => ({
-      ...prev,
-      [id]: { ...prev[id], [size]: (prev[id]?.[size] || 0) + 1 }
-    }));
-  };
-
-  const handleCartDecrease = (id: string, size: string) => {
-    setCartDetails(prev => {
-      const currentQty = prev[id]?.[size] || 0;
-      if (currentQty <= 1) {
-         // Remove this size
-         const newSizes = { ...prev[id] };
-         delete newSizes[size];
-         
-         // If product has no sizes left, remove product
-         if (Object.keys(newSizes).length === 0) {
-             const newCart = { ...prev };
-             delete newCart[id];
-             return newCart;
-         }
-         return { ...prev, [id]: newSizes };
-      }
-      return { ...prev, [id]: { ...prev[id], [size]: currentQty - 1 } };
-    });
-  };
-
-  const handleCardAddClick = (product: Product) => {
-    if (product.sizes && product.sizes.length > 0) {
-      setSelectedProduct(product);
-      setIsDialogOpen(true);
-    } else {
-      increaseSingleItem(product.id);
+  const decreaseSingleItem = async (productId: string) => {
+    const existingItem = findCartItem(productId);
+    if (existingItem) {
+      await updateQuantity(existingItem.id, existingItem.quantity - 1);
     }
   };
 
-  const handleDialogSave = (quantities: Record<string, number>) => {
+  // Updated to use 'variants' and 'label' (Backend Terms)
+  const handleDialogSave = async (quantities: Record<string, number>) => {
     if (!selectedProduct) return;
-    const cleanQuantities: Record<string, number> = {};
-    let total = 0;
-    Object.entries(quantities).forEach(([size, qty]) => {
-      if (qty > 0) {
-        cleanQuantities[size] = qty;
-        total += qty;
-      }
-    });
 
-    setCartDetails(prev => {
-      if (total === 0) {
-        const copy = { ...prev };
-        delete copy[selectedProduct.id];
-        return copy;
-      }
-      return { ...prev, [selectedProduct.id]: cleanQuantities };
-    });
+    for (const [variantLabel, newQty] of Object.entries(quantities)) {
+        // CHANGE: Use 'variants' and 'label'
+        const variantObj = selectedProduct.variants?.find(v => v.label === variantLabel);
+        const variantId = variantObj?.id; 
+
+        if (!variantId) continue;
+
+        const existingItem = findCartItem(selectedProduct.id, variantId);
+
+        if (existingItem) {
+            await updateQuantity(existingItem.id, newQty);
+        } else if (newQty > 0) {
+            await addToCart(selectedProduct.id, newQty, variantId);
+        }
+    }
   };
 
-  const filteredProducts = PRODUCTS.filter((product) => {
-    const matchesDiet = dietFilter === 'all' || product.category === dietFilter;
+  const handleCartIncrease = async (cartItemId: string) => {
+      const item = cart.find(i => i.id === cartItemId);
+      if(item) await updateQuantity(cartItemId, item.quantity + 1);
+  };
+
+  const handleCartDecrease = async (cartItemId: string) => {
+      const item = cart.find(i => i.id === cartItemId);
+      if(item) await updateQuantity(cartItemId, item.quantity - 1);
+  };
+
+  const handleCardAddClick = (product: Product) => {
+    // CHANGE: Check 'variants' instead of 'sizes'
+    if (product.variants && product.variants.length > 0) {
+      setSelectedProduct(product);
+      setIsDialogOpen(true);
+    } else {
+      increaseSingleItem(product);
+    }
+  };
+
+  // --- 2. Updated Filter Logic ---
+  const filteredProducts = products.filter((product) => {
+    // Translate UI ('veg') to Backend Enum ('VEG')
+    const targetFoodType = dietFilter === 'veg' ? 'VEG' : 'NON_VEG';
+    
+    // CHANGE: Check 'foodType' instead of 'category'
+    const matchesDiet = dietFilter === 'all' || product.foodType === targetFoodType;
     const matchesCategory = selectedCategory === 'all' || product.categoryId === selectedCategory;
+    
     return matchesDiet && matchesCategory;
   });
 
   return (
     <main className="h-dvh w-full md:max-w-md md:mx-auto bg-brand-bg relative shadow-xl overflow-hidden">
       
-      {/* --- CONDITIONAL RENDERING --- */}
+      {!tableId && (
+         <div className="absolute top-0 left-0 right-0 z-50">
+           <TestTableSetter />
+         </div>
+      )}
+
       {currentView === 'CART' ? (
         <CartPage 
-          cartDetails={cartDetails}
+          cartItems={cart} 
           onBack={() => setCurrentView('HOME')}
-          onClear={() => setCartDetails({})}
           onIncrease={handleCartIncrease}
           onDecrease={handleCartDecrease}
+          totalAmount={cart.reduce((sum, item) => {
+              const price = item.variant ? item.variant.price : (item.menuItem.price || 0);
+              // Handle Cents if needed (divide by 100)
+              // const realPrice = price / 100; 
+              return sum + (price * item.quantity);
+          }, 0)}
         />
       ) : (
-        /* --- HOME PAGE VIEW --- */
         <>
-          <div className="flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col">
+          <div className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col ${!tableId ? 'pt-12' : ''}`}> 
             
             <div className="px-4 shrink-0">
-                {/* Updated Header with Cart Click Handler */}
                 <Header 
                   cartCount={getTotalCartCount()} 
                   onCartClick={() => setCurrentView('CART')}
@@ -161,18 +187,20 @@ export default function Home() {
                 <section>
                 <SectionTitle title="Featured Product" />
                 <div className='flex flex-col gap-3 pb-safe'>
-                    {filteredProducts.length > 0 ? (
+                    {isMenuLoading && <p className="text-center text-sm text-gray-500 py-10">Loading menu...</p>}
+                    
+                    {!isMenuLoading && filteredProducts.length > 0 ? (
                         filteredProducts.map((product) => (
                             <ProductCard 
                                 key={product.id} 
                                 product={product}
                                 cartQty={getProductTotalQty(product.id)}
                                 onAddClick={() => handleCardAddClick(product)}
-                                onIncrease={() => increaseSingleItem(product.id)}
+                                onIncrease={() => increaseSingleItem(product)}
                                 onDecrease={() => decreaseSingleItem(product.id)}
                             />
                         ))
-                    ) : (
+                    ) : !isMenuLoading && (
                         <div className="py-10 text-center opacity-50">
                             <p className="text-gray-500 font-medium">No items found</p>
                             <button onClick={() => {setDietFilter('all'); setSelectedCategory('all')}} className="mt-2 text-brand-red text-xs underline">
@@ -188,7 +216,15 @@ export default function Home() {
           <ProductDialog 
             isOpen={isDialogOpen} 
             product={selectedProduct} 
-            initialData={selectedProduct ? (cartDetails[selectedProduct.id] || {}) : {}}
+            initialData={
+                selectedProduct 
+                ? cart.filter(i => i.menuItem.id === selectedProduct.id).reduce((acc, item) => {
+                    // CHANGE: Use 'label' because Backend/Types now use 'label'
+                    if(item.variant) acc[item.variant.label] = item.quantity;
+                    return acc;
+                  }, {} as Record<string, number>)
+                : {}
+            }
             onClose={() => setIsDialogOpen(false)}
             onSave={handleDialogSave}
           />

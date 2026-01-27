@@ -8,17 +8,18 @@ export const CATEGORIES: Category[] = [
 ];
 
 export const PRODUCTS: Product[] = [
- {
+  {
     id: '1',
     name: 'Rolled Sushi',
     description: 'Rolled sushi, or maki, is sushi where ingredients...',
-    price: 7.99, // Base price (displayed if no size selected)
+    price: 7.99,
     rating: 4.8,
     image: '/images/sushi.jpeg',
     qty: 1,
     sizes: [
-      { name: "6 pcs", price: 7.99 },
-      { name: "12 pcs", price: 14.99 }
+      // Added IDs here
+      { id: "1_6pcs", name: "6 pcs", price: 7.99 },
+      { id: "1_12pcs", name: "12 pcs", price: 14.99 }
     ],
     category: 'non-veg',
     categoryId: '2'
@@ -32,9 +33,10 @@ export const PRODUCTS: Product[] = [
     image: '/images/ramen.jpeg',
     qty: 1,
     sizes: [
-      { name: "Small", price: 8.99 },
-      { name: "Medium", price: 10.99 },
-      { name: "Large", price: 12.99 }
+      // Added IDs here
+      { id: "2_small", name: "Small", price: 8.99 },
+      { id: "2_medium", name: "Medium", price: 10.99 },
+      { id: "2_large", name: "Large", price: 12.99 }
     ],
     category: 'non-veg',
     categoryId: '2'
@@ -48,21 +50,23 @@ export const PRODUCTS: Product[] = [
     image: '/images/fried-chicken.jpeg',
     qty: 1,
     sizes: [
-      { name: "Half", price: 6.99 },
-      { name: "Full", price: 11.99 }
+      // Added IDs here
+      { id: "3_half", name: "Half", price: 6.99 },
+      { id: "3_full", name: "Full", price: 11.99 }
     ],
     category: 'non-veg',
     categoryId: '2'
   },
   {
     id: '4',
-    name: ' Veg Burger',
+    name: 'Veg Burger',
     description: 'Popular dish featuring bite-sized pieces of paneer that are ..',
     price: 6.99,
     rating: 4.8,
     image: '/images/burgers.jpeg',
-    qty: 3,
+    qty: 3, // Note: This might represent a default qty or placeholder
     category: 'veg',
     categoryId: '1'
+    // No sizes array needed here if it has no variants
   },
 ];
