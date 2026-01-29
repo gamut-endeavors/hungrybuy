@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-
+import path from "path";
 import { attachUserMiddleware } from "./middlewares/auth.middleware";
 import authRoutes from "./routes/auth.route";
 import adminRoutes from "./routes/admin.route";
@@ -18,6 +18,8 @@ export function startServer() {
 
   app.use(express.json());
   app.use(cors());
+
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   app.use(attachUserMiddleware);
 

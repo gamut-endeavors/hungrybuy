@@ -2,6 +2,7 @@ import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { Prisma } from "@prisma/client";
 import { AuthenticatedRequest } from "../types/auth";
+import { deleteFileByUrl } from "../utils/file";
 
 export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
   try {
@@ -15,6 +16,11 @@ export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
       return res.status(400).json({ message: "Missing required " });
     }
 
+    let image: string | null = null;
+    if (req.file) {
+      image = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+    }
+
     const item = await prisma.menuItem.create({
       data: {
         name,
@@ -22,6 +28,7 @@ export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
         price: price !== undefined ? new Prisma.Decimal(price) : null,
         foodType,
         categoryId,
+        image,
       },
     });
 
@@ -74,6 +81,20 @@ export async function updateMenuItem(req: AuthenticatedRequest, res: Response) {
     const { name, description, price, foodType, categoryId, isAvailable } =
       req.body;
 
+    const item = await prisma.menuItem.findUnique({
+      where: { id },
+    });
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    let newImage: string | undefined = undefined;
+    if (req.file) {
+      deleteFileByUrl(item.image);
+
+      newImage = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+    }
+
     const updatedItem = await prisma.menuItem.update({
       where: { id },
       data: {
@@ -83,6 +104,7 @@ export async function updateMenuItem(req: AuthenticatedRequest, res: Response) {
         ...(foodType !== undefined && { foodType }),
         ...(categoryId !== undefined && { categoryId }),
         ...(isAvailable !== undefined && { isAvailable }),
+        ...(newImage !== undefined && { image: newImage }),
       },
     });
 
@@ -106,6 +128,15 @@ export async function deleteMenuItem(req: AuthenticatedRequest, res: Response) {
     if (!id || Array.isArray(id)) {
       return res.status(400).json({ message: "Invalid item ID" });
     }
+
+    const item = await prisma.menuItem.findUnique({
+      where: { id },
+    });
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    deleteFileByUrl(item.image);
 
     await prisma.menuItem.delete({ where: { id } });
     return res.status(200).json({ message: "Deleted successfully" });

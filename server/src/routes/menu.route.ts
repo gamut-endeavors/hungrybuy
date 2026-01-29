@@ -9,12 +9,13 @@ import {
   updateMenuItem,
   updateVariant,
 } from "../controllers/menu.controller";
+import { upload } from "../utils/upload";
 
 const router = Router();
 
 router.get("/", getMenu);
-router.post("/create", createMenuItem);
-router.patch("/:id", updateMenuItem);
+router.post("/create", upload.single("image"), createMenuItem);
+router.patch("/:id", upload.single("image"), updateMenuItem);
 router.delete("/:id", deleteMenuItem);
 
 router.get("/:menuItemId/variants", getAllVariants);
