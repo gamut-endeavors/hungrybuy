@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { prisma } from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 import { AuthenticatedRequest } from "../types/auth";
 
 export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
@@ -18,7 +19,7 @@ export async function createMenuItem(req: AuthenticatedRequest, res: Response) {
       data: {
         name,
         description: description ?? "",
-        price: price !== undefined ? Number(price) : null,
+        price: price !== undefined ? new Prisma.Decimal(price) : null,
         foodType,
         categoryId,
       },
@@ -145,7 +146,7 @@ export async function createVariant(req: AuthenticatedRequest, res: Response) {
     const newVariant = await prisma.menuVariant.create({
       data: {
         label,
-        price: Number(price),
+        price: new Prisma.Decimal(price),
         menuItemId,
       },
     });

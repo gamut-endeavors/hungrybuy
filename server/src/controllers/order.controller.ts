@@ -150,6 +150,8 @@ export async function updateOrderStatus(
     let isActive = true;
     if (status === "PAID") {
       isActive = false;
+    } else {
+      isActive = true;
     }
 
     const updatedOrder = await prisma.order.update({
