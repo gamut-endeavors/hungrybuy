@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import { ShoppingBag, DollarSign, Users, Plus, LogOut } from 'lucide-react';
+import QrCodeModal from '@/components/admin/modals/QrCodeModal';
 
 // Types & Data
-import { Order, OrderStatus, Product, Category } from '@/lib/types';
-import { INITIAL_ORDERS, ORDER_TABS, INITIAL_CATEGORIES, INITIAL_PRODUCTS } from '@/lib/data';
+import { Order, OrderStatus, Product, Table } from '@/lib/types';
+import { ORDER_TABS } from '@/lib/data';
 
 // Redux
 import { RootState, AppDispatch } from '@/lib/store/store';
@@ -17,6 +18,7 @@ import { logout } from '@/lib/store/features/authSlice';
 import { fetchTables, addTable, deleteTable } from '@/lib/store/features/tableSlice';
 import { fetchCategories, addCategory, deleteCategory } from '@/lib/store/features/categorySlice';
 import { fetchProducts, addProduct, updateProduct, deleteProduct } from '@/lib/store/features/menuSlice';
+import { fetchOrders, updateOrderStatus } from '@/lib/store/features/orderSlice';
 
 // Components
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -45,6 +47,7 @@ export default function AdminDashboard() {
   const { tables } = useSelector((state: RootState) => state.tables); // <--- Tables from Redux
   const { categories } = useSelector((state: RootState) => state.categories);
   const { products } = useSelector((state: RootState) => state.menu);
+  const { orders } = useSelector((state: RootState) => state.orders);
 
   // --- Hydration Fix ---
   useEffect(() => {
@@ -64,6 +67,7 @@ export default function AdminDashboard() {
       dispatch(fetchTables());
       dispatch(fetchCategories());
       dispatch(fetchProducts());
+      dispatch(fetchOrders());
     }
   }, [isAuthenticated, dispatch]);
 
@@ -76,13 +80,11 @@ export default function AdminDashboard() {
   // --- VIEW STATE ---
   const [currentView, setCurrentView] = useState<'ORDERS' | 'TABLES' | 'MENU'>('ORDERS');
 
-  // --- DATA STATE ---
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-
   // --- UI STATE ---
   const [activeTab, setActiveTab] = useState<OrderStatus | 'All'>('All');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedQrTable, setSelectedQrTable] = useState<Table | null>(null);
 
   // --- MODAL STATES ---
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
@@ -90,7 +92,13 @@ export default function AdminDashboard() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // --- HANDLERS ---
+
+  // --- HANDLERS --
+  // 
+  const getTableNumber = (tableUuid: string) => {
+    const found = tables.find(t => t.id === tableUuid);
+    return found ? found.number : '??';
+  };
 
   // 5. Updated Add Table Handler (API)
   const handleAddTable = async (newTableInput: string) => {
@@ -120,14 +128,20 @@ export default function AdminDashboard() {
   };
 
   // ... (Other handlers remain the same) ...
-  const cycleOrderStatus = (orderId: string) => {
+  const cycleOrderStatus = async (orderId: string) => {
+    // Find current status
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
     const statusFlow: Record<OrderStatus, OrderStatus> = {
       'PENDING': 'SERVED',
       'SERVED': 'PAID',
       'PAID': 'CANCELLED',
       'CANCELLED': 'PENDING',
     };
-    setOrders(prev => prev.map(order => order.id === orderId ? { ...order, status: statusFlow[order.status] } : order));
+
+    const nextStatus = statusFlow[order.status];
+    await dispatch(updateOrderStatus({ orderId, status: nextStatus }));
   };
 
   const openAddProduct = () => { setEditingProduct(null); setIsProductModalOpen(true); };
@@ -136,7 +150,7 @@ export default function AdminDashboard() {
 
   const handleMarkCompleted = () => {
     if (selectedOrder) {
-      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status: 'PAID' } : o));
+      dispatch(updateOrderStatus({ orderId: selectedOrder.id, status: 'PAID' }));
       setSelectedOrder(null);
     }
   };
@@ -186,8 +200,16 @@ export default function AdminDashboard() {
   // --- STATS ---
   const stats = {
     activeOrders: orders.filter(o => o.status !== 'PAID').length,
-    revenue: orders.reduce((sum, o) => sum + o.totalAmount, 0),
-    customers: 85
+    revenue: orders
+      .filter(o => o.status === 'PAID')
+      .reduce((totalAcc, order) => {
+        const orderTotal = order.items.reduce((itemAcc, item) => {
+          return itemAcc + (item.price * item.quantity);
+        }, 0);
+        return totalAcc + orderTotal;
+      }, 0) / 100,
+
+    customers: orders.length
   };
 
   const filteredProducts = activeCategory === 'all' ? products : products.filter(p => p.categoryId === activeCategory);
@@ -201,14 +223,14 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-24">
 
-      <div className="max-w-7xl mx-auto pt-4 px-4 md:px-8 flex justify-between items-center">
+      {/* <div className="max-w-7xl mx-auto pt-4 px-4 md:px-8 flex justify-between items-center">
         <p className="text-sm text-gray-500">Welcome back, <span className="font-bold text-gray-900">{user?.name}</span></p>
         <button onClick={handleLogout} className="flex items-center gap-2 text-xs font-bold text-brand-red bg-red-50 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors">
           <LogOut size={14} /> Logout
         </button>
-      </div>
+      </div> */}
 
-      <AdminHeader />
+      <AdminHeader onLogout={handleLogout} />
 
       <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
 
@@ -234,10 +256,14 @@ export default function AdminDashboard() {
               {filteredOrders.length > 0 ? (
                 filteredOrders.map(order => (
                   <div key={order.id} onClick={() => handleOrderClick(order)} className="cursor-pointer block">
-                    <OrderRow order={order} onStatusClick={() => cycleOrderStatus(order.id)} />
+                    <OrderRow
+                      order={order}
+                      tableNumber={getTableNumber(order.tableId)}
+                      onStatusClick={() => cycleOrderStatus(order.id)}
+                    />
                   </div>
                 ))
-              ) : <div className="p-10 text-center text-gray-400">No orders found.</div>}
+              ) : <div className="p-10 text-center text-gray-400">No active orders found.</div>}
             </div>
           </div>
         )}
@@ -254,6 +280,7 @@ export default function AdminDashboard() {
               activeOrders={orders}
               onAddClick={() => setIsTableModalOpen(true)}
               onDeleteTable={handleDeleteTable}
+              onQrClick={(table) => setSelectedQrTable(table)}
             />
           </div>
         )}
@@ -283,7 +310,7 @@ export default function AdminDashboard() {
       <AdminBottomNav activeTab={currentView} onTabChange={setCurrentView} />
 
       <AnimatePresence>
-        {selectedOrder && <OrderDetailsView key="order-details" order={selectedOrder} onBack={() => setSelectedOrder(null)} onComplete={handleMarkCompleted} />}
+        {selectedOrder && <OrderDetailsView key="order-details" order={selectedOrder} tableNumber={getTableNumber(selectedOrder.tableId)} onBack={() => setSelectedOrder(null)} onComplete={handleMarkCompleted} />}
       </AnimatePresence>
 
       <AddTableModal
@@ -295,6 +322,11 @@ export default function AdminDashboard() {
       <AddProductModal isOpen={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} onSave={handleSaveProduct} categories={categories} initialData={editingProduct} />
       <ManageCategoriesModal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} categories={categories} onAdd={handleAddCategory} onDelete={handleDeleteCategory} />
 
+      <QrCodeModal
+        isOpen={!!selectedQrTable}
+        onClose={() => setSelectedQrTable(null)}
+        table={selectedQrTable}
+      />
     </div>
   );
 }
