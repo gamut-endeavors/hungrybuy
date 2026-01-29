@@ -1,6 +1,6 @@
 # Hungrybuy
 
-A AR based digital menu and table-based ordering system designed to enhance the dining experience for restaurants. Multiple users at the same table can collectievely browse the menu, manage a shared cart, place orders, and track order status in real time - with full auditability.
+A QR based digital menu and table-based ordering system designed to enhance the dining experience for restaurants. Multiple users at the same table can collectievely browse the menu, manage a shared cart, place orders, and track order status in real time - with full auditability.
 
 ## Features
 
