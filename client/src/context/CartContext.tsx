@@ -1,8 +1,14 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { api } from '@/lib/api';
-import { toast } from 'react-hot-toast';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { api } from "@/lib/api";
+import { toast } from "react-hot-toast";
 
 // --- Types (Matching your Prisma Schema) ---
 type Variant = {
@@ -35,7 +41,11 @@ type CartContextType = {
   tableNo: number;
   setTableId: (id: string) => void;
   resolveTableFromToken: (token: string) => Promise<void>;
-  addToCart: (menuItemId: string, quantity: number, variantId?: string) => Promise<void>;
+  addToCart: (
+    menuItemId: string,
+    quantity: number,
+    variantId?: string,
+  ) => Promise<void>;
   updateQuantity: (cartItemId: string, newQuantity: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   placeOrder: () => Promise<void>;
@@ -47,11 +57,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [tableId, setTableIdState] = useState<string | null>(null);
-  const [tableNo, setTableNo] = useState<number>(0)
+  const [tableNo, setTableNo] = useState<number>(0);
 
   // 1. Fetch Cart when tableId changes
   useEffect(() => {
-    const storedTableId = localStorage.getItem('table_id');
+    const storedTableId = localStorage.getItem("table_id");
     if (storedTableId) {
       setTableIdState(storedTableId);
       fetchCart(storedTableId);
@@ -60,7 +70,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const setTableId = (id: string) => {
     setTableIdState(id);
-    localStorage.setItem('table_id', id);
+    localStorage.setItem("table_id", id);
     fetchCart(id);
   };
 
@@ -80,7 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setTableNo(tableNo);
         toast.success("Connected to table!");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("QR Resolution Error:", error);
       toast.error("Invalid QR Code");
     } finally {
@@ -101,7 +111,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   // 2. Add to Cart
-  const addToCart = async (menuItemId: string, quantity: number, variantId?: string) => {
+  const addToCart = async (
+    menuItemId: string,
+    quantity: number,
+    variantId?: string,
+  ) => {
     if (!tableId) {
       toast.error("No table selected!");
       return;
@@ -111,12 +125,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // Frontend Logic: Check if item already exists to increment quantity
       // (Because backend replaces quantity instead of adding)
       const existingItem = cart.find(
-        (item) => item.menuItem.id === menuItemId && item.variant?.id === variantId
+        (item) =>
+          item.menuItem.id === menuItemId && item.variant?.id === variantId,
       );
 
-      const finalQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+      const finalQuantity = existingItem
+        ? existingItem.quantity + quantity
+        : quantity;
 
-      const res = await api.post(`/cart/add-to-cart/${tableId}`, {
+      await api.post(`/cart/add-to-cart/${tableId}`, {
         menuItemId,
         variantId,
         quantity: finalQuantity,
@@ -142,11 +159,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       // Optimistic UI Update (Make it feel fast)
       setCart((prev) =>
-        prev.map((item) => (item.id === cartItemId ? { ...item, quantity: newQuantity } : item))
+        prev.map((item) =>
+          item.id === cartItemId ? { ...item, quantity: newQuantity } : item,
+        ),
       );
 
       await api.patch(`/cart/${cartItemId}`, { quantity: newQuantity });
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Failed to update cart");
       // Revert fetch on error
       if (tableId) fetchCart(tableId);
@@ -189,7 +208,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // 5. Calculate Total
   const totalAmount = cart.reduce((total, item) => {
-    const price = item.variant ? item.variant.price : (item.menuItem.price || 0);
+    const price = item.variant ? item.variant.price : item.menuItem.price || 0;
     return total + price * item.quantity;
   }, 0);
 
@@ -206,7 +225,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addToCart,
         updateQuantity,
         removeFromCart,
-        placeOrder
+        placeOrder,
       }}
     >
       {children}
