@@ -7,12 +7,13 @@ import ProductCard from '@/components/cards/ProductCard';
 import ProductDialog from '@/components/ui/ProductDialog';
 import DietFilter from '@/components/ui/DietFilter';
 import CartPage from '@/components/ui/CartPage';
-import TestTableSetter from '@/components/other/TestTableSetter';
 import { CATEGORIES } from '@/lib/constants';
 import { Product } from '@/lib/types';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { api } from '@/lib/api';
+import QRHandler from '@/components/auth/QRHandler';
+import TableStatus from '@/components/other/TableStatus';
 
 export default function Home() {
   const [dietFilter, setDietFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
@@ -150,11 +151,11 @@ export default function Home() {
   return (
     <main className="h-dvh w-full md:max-w-md md:mx-auto bg-brand-bg relative shadow-xl overflow-hidden">
 
-      {!tableId && (
-        <div className="absolute top-0 left-0 right-0 z-50">
-          <TestTableSetter />
-        </div>
-      )}
+      <QRHandler />
+
+      {/* <div className="">
+        <TableStatus />
+      </div> */}
 
       {currentView === 'CART' ? (
         <CartPage
@@ -172,7 +173,7 @@ export default function Home() {
         />
       ) : (
         <>
-          <div className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col ${!tableId ? 'pt-12' : ''}`}>
+          <div className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col`}>
 
             <div className="px-4 shrink-0">
               <Header

@@ -32,7 +32,9 @@ type CartContextType = {
   isLoading: boolean;
   totalAmount: number;
   tableId: string | null;
+  tableNo: number;
   setTableId: (id: string) => void;
+  resolveTableFromToken: (token: string) => Promise<void>;
   addToCart: (menuItemId: string, quantity: number, variantId?: string) => Promise<void>;
   updateQuantity: (cartItemId: string, newQuantity: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
@@ -44,19 +46,51 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  // Ideally, this tableId comes from the URL (e.g. /table/123) or a QR code scan.
-  // For testing, we can set it manually or check localStorage.
-  const [tableId, setTableId] = useState<string | null>(null);
+  const [tableId, setTableIdState] = useState<string | null>(null);
+  const [tableNo, setTableNo] = useState<number>(0)
 
   // 1. Fetch Cart when tableId changes
   useEffect(() => {
-    if (tableId) fetchCart(tableId);
-  }, [tableId]);
+    const storedTableId = localStorage.getItem('table_id');
+    if (storedTableId) {
+      setTableIdState(storedTableId);
+      fetchCart(storedTableId);
+    }
+  }, []);
+
+  const setTableId = (id: string) => {
+    setTableIdState(id);
+    localStorage.setItem('table_id', id);
+    fetchCart(id);
+  };
+
+  const resolveTableFromToken = async (token: string) => {
+    setIsLoading(true);
+    try {
+      // Matches Backend: router.get("/qr/:qrToken", resolveQr);
+      const res = await api.get(`/table/qr/${token}`);
+
+      const resolvedTable = res.data.data.table;
+
+      const tableId = resolvedTable.id;
+      const tableNo = resolvedTable.number;
+
+      if (tableId) {
+        setTableId(tableId);
+        setTableNo(tableNo);
+        toast.success("Connected to table!");
+      }
+    } catch (error: any) {
+      console.error("QR Resolution Error:", error);
+      toast.error("Invalid QR Code");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchCart = async (tid: string) => {
     setIsLoading(true);
     try {
-      // Assuming your route is /cart/:tableId based on router setup
       const res = await api.get(`/cart/${tid}`);
       setCart(res.data.data.cart);
     } catch (error) {
@@ -166,7 +200,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isLoading,
         totalAmount,
         tableId,
+        tableNo,
         setTableId,
+        resolveTableFromToken,
         addToCart,
         updateQuantity,
         removeFromCart,

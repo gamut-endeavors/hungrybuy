@@ -45,28 +45,19 @@ export interface Product {
 // Represents the relation in Prisma: Order -> OrderItem
 export interface OrderItem {
   id: string;
-  menuItemId: string;
   quantity: number;
-  price: number; // Snapshot price at time of order
-  
-  // Relations (often included in API responses)
-  menuItem?: Product;
-  variant?: MenuVariant | null;
+  price: number; 
+  menuItem: Product; 
+  variant?: { id: string; label: string; price: number } | null;
 }
 
 export interface Order {
   id: string;
   tableId: string;
-  status: OrderStatus;
-  createdAt: string; // ISO Date String coming from JSON
-  
-  // Prisma relation is named 'orders', but UI often uses 'items'
-  // We align with Prisma here:
-  orders: OrderItem[]; 
-
-  // UI Computed Helpers (Calculated on frontend or sent as extras)
-  totalAmount: number; 
-  customerNote?: string;
+  status: OrderStatus 
+  createdAt: string;
+  isActive: boolean;
+  items: OrderItem[]; 
 }
 
 // --- AUTH STATE ---
