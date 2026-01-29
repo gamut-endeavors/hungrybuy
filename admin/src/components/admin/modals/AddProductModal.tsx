@@ -55,6 +55,7 @@ export default function AddProductModal({ isOpen, onClose, onSave, categories, i
         // Populate variants if they exist
         if (initialData.variants) {
           setVariants(initialData.variants.map(v => ({
+            id: v.id,
             label: v.label,
             price: (v.price / 100).toFixed(2)
           })));

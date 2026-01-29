@@ -24,7 +24,7 @@ type CartItem = {
   id: string;
   quantity: number;
   menuItem: MenuItem;
-  variant?: Variant | null; // Optional
+  variant?: Variant | null;
 };
 
 type CartContextType = {
@@ -36,6 +36,7 @@ type CartContextType = {
   addToCart: (menuItemId: string, quantity: number, variantId?: string) => Promise<void>;
   updateQuantity: (cartItemId: string, newQuantity: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
+  placeOrder: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -114,7 +115,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast.error("Failed to update cart");
       // Revert fetch on error
-      if(tableId) fetchCart(tableId); 
+      if (tableId) fetchCart(tableId);
     }
   };
 
@@ -123,12 +124,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       // Optimistic UI Update
       setCart((prev) => prev.filter((item) => item.id !== cartItemId));
-      
+
       await api.delete(`/cart/${cartItemId}`);
       toast.success("Item removed");
     } catch (error) {
       toast.error("Failed to remove item");
-      if(tableId) fetchCart(tableId);
+      if (tableId) fetchCart(tableId);
+    }
+  };
+
+  const placeOrder = async () => {
+    if (!tableId) {
+      toast.error("Table ID missing!");
+      throw new Error("No Table ID");
+    }
+
+    try {
+      // Calls the order routes: router.post("/create/:tableId", createOrder);
+      await api.post(`/order/create/${tableId}`);
+
+      // Success: Clear local cart immediately
+      setCart([]);
+      toast.success("Order placed successfully!");
+    } catch (error: any) {
+      console.error("Place Order Error:", error);
+      toast.error(error.response?.data?.message || "Failed to place order");
+      throw error; // Re-throw to let UI handle loading states
     }
   };
 
@@ -149,6 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         addToCart,
         updateQuantity,
         removeFromCart,
+        placeOrder
       }}
     >
       {children}
