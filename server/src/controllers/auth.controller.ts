@@ -7,16 +7,6 @@ export async function registerUser(req: Request, res: Response) {
   try {
     const { name, phone, otp } = req.body;
 
-    // -- -- -- -- -- validate phone -- -- -- -- --
-    if (!phone) {
-      return res.status(400).json({ message: "Phone is required" });
-    }
-
-    // -- -- -- -- -- validate otp -- -- -- -- --
-    if (!otp) {
-      return res.status(400).json({ message: "OTP is required" });
-    }
-
     if (verifyOtp(phone, otp) === false) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
@@ -32,16 +22,10 @@ export async function registerUser(req: Request, res: Response) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // -- -- -- -- -- sanitize name -- -- -- -- --
-    const finalName =
-      typeof name === "string" && name.trim().length > 0
-        ? name.trim()
-        : "world";
-
     // -- -- -- -- -- create the user -- -- -- -- --
     const newUser = await prisma.user.create({
       data: {
-        name: finalName,
+        name: name ?? "world",
         phone,
       },
     });
@@ -63,16 +47,6 @@ export async function registerUser(req: Request, res: Response) {
 export async function loginUser(req: Request, res: Response) {
   try {
     const { phone, otp } = req.body;
-
-    // -- -- -- -- -- validate phone -- -- -- -- --
-    if (!phone) {
-      return res.status(400).json({ message: "Phone is required" });
-    }
-
-    // -- -- -- -- -- validate otp -- -- -- -- --
-    if (!otp) {
-      return res.status(400).json({ message: "OTP is required" });
-    }
 
     // -- -- -- -- -- check if user exists -- -- -- -- --
     const user = await prisma.user.findUnique({

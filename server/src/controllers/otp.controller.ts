@@ -5,9 +5,6 @@ export async function sendOtp(req: Request, res: Response) {
   try {
     // -- -- -- -- -- validate phone -- -- -- -- --
     const { phone } = req.body;
-    if (!phone) {
-      return res.status(400).json({ message: "Phone is required" });
-    }
 
     // -- -- -- -- -- rate limit otp -- -- -- -- --
     if (!canRequestOtp(phone)) {
