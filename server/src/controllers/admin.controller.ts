@@ -1,24 +1,23 @@
-import { Request, Response } from "express";
-import { AuthenticatedRequest } from "../types/auth";
+import { Response } from "express";
 import { prisma } from "../lib/prisma";
 import { hashPassword, verifyPassword } from "../utils/hash";
 import { signJwt } from "../utils/jwt";
+import { TypedRequest } from "../types/request";
+import { AdminLoginBody, CreateShopBody } from "../validation/auth.schema";
 
-export async function adminLogin(req: Request, res: Response) {
+export async function adminLogin(
+  req: TypedRequest<{}, AdminLoginBody, {}>,
+  res: Response,
+) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
 
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
     });
-
+    
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -41,14 +40,8 @@ export async function adminLogin(req: Request, res: Response) {
   }
 }
 
-export async function getAllShops(req: AuthenticatedRequest, res: Response) {
+export async function getAllShops(_: TypedRequest, res: Response) {
   try {
-    const userRole = req.headers["x-user-role"];
-
-    if (!userRole || userRole !== "ADMIN") {
-      return res.status(401).json({ message: "Forbidden" });
-    }
-
     const shops = await prisma.user.findMany({
       where: {
         role: "SHOP",
@@ -71,20 +64,12 @@ export async function getAllShops(req: AuthenticatedRequest, res: Response) {
   }
 }
 
-export async function createShop(req: AuthenticatedRequest, res: Response) {
+export async function createShop(
+  req: TypedRequest<{}, CreateShopBody, {}>,
+  res: Response,
+) {
   try {
-    const userRole = req.headers["x-user-role"];
-
-    if (!userRole || userRole !== "ADMIN") {
-      return res.status(401).json({ message: "Forbidden" });
-    }
-
     const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Name, email and password are required" });
-    }
 
     const shop = await prisma.user.findUnique({
       where: {
@@ -100,7 +85,7 @@ export async function createShop(req: AuthenticatedRequest, res: Response) {
 
     const newShop = await prisma.user.create({
       data: {
-        name: "Shop",
+        name: name ?? "Shop",
         email,
         password: hashedPassword,
         role: "SHOP",

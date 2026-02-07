@@ -1,10 +1,10 @@
 import { NextFunction, Response } from "express";
-import { AuthenticatedRequest } from "../types/auth";
 import { JwtPayload, verifyToken } from "../utils/jwt";
+import { TypedRequest } from "../types/request";
 
 export function attachUserMiddleware(
-  req: AuthenticatedRequest,
-  res: Response,
+  req: TypedRequest,
+  _: Response,
   next: NextFunction,
 ) {
   const authHeader = req.headers.authorization;
@@ -19,8 +19,10 @@ export function attachUserMiddleware(
 
   try {
     const payload: JwtPayload = verifyToken(token);
-    req.headers["x-user-id"] = payload.id;
-    req.headers["x-user-role"] = payload.role;
+    req.user = {
+      id: payload.id,
+      role: payload.role,
+    };
   } catch (error) {
     console.log("AUTH_JWT_ERROR", error);
   }
