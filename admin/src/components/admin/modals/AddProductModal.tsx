@@ -268,7 +268,7 @@ export default function AddProductModal({ isOpen, onClose, onSave, categories, i
                       placeholder="Size/Type (e.g. Large)"
                       value={v.label}
                       onChange={e => updateVariant(idx, 'label', e.target.value)}
-                      className="flex-[2] h-10 border border-gray-200 rounded-lg px-3 text-xs focus:border-brand-red outline-none"
+                      className="flex-2 h-10 border border-gray-200 rounded-lg px-3 text-xs focus:border-brand-red outline-none"
                     />
                     <div className="relative flex-1">
                       <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
