@@ -13,6 +13,7 @@ import { upload } from "../utils/upload";
 import { requireRole } from "../middlewares/role.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import {
+  CreateMenuBody,
   CreateVariantBody,
   CreateVariantParams,
   DeleteMenuItemParams,
@@ -38,7 +39,7 @@ router.post(
   "/create",
   requireRole(["ADMIN", "SHOP"]),
   upload.single("image"),
-  validate(CreateVariantBody),
+  validate(CreateMenuBody),
   createMenuItem,
 );
 
