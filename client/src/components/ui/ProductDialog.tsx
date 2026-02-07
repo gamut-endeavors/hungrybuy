@@ -75,7 +75,6 @@ export default function ProductDialog({ product, isOpen, onClose, initialData, o
             <div key={size.label} className="flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0">
               <div>
                 <span className="font-semibold text-sm sm:text-base text-brand-dark block">{size.label}</span>
-                {/* Divide by 100 for cents conversion if needed, or keep as is if stored as dollars */}
                 <span className="text-brand-red font-bold text-sm sm:text-base">$ {(size.price / 100).toFixed(2)}</span>
               </div>
               <QuantityBtn

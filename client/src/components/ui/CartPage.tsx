@@ -8,7 +8,7 @@ import { BackendCartItem } from '@/lib/types';
 
 interface CartPageProps {
   cartItems: BackendCartItem[];
-  totalAmount: number; // Expecting Integers (cents) from parent calculation
+  totalAmount: number;
   onBack: () => void;
   onIncrease: (cartItemId: string) => void;
   onDecrease: (cartItemId: string) => void;
@@ -32,13 +32,10 @@ export default function CartPage({
     setIsPlacing(true);
     try {
       await onPlaceOrder();
-      // On success, parent (Home) usually switches view, so we don't need to unset loading
     } catch {
-      setIsPlacing(false); // Reset on error so they can try again
+      setIsPlacing(false); 
     }
   };
-
-  // Helper: Lookup image from constants because DB doesn't have images yet
   const getProductImage = () => {
     // const found = PRODUCTS.find(p => p.name.toLowerCase() === name.toLowerCase());
     return '/images/burgers.jpeg';
@@ -86,7 +83,6 @@ export default function CartPage({
         {/* Cart Items List */}
         {cartItems.length > 0 ? (
           cartItems.map((item) => {
-            // Priority: Variant Price > Base Menu Price
             const rawPrice: number = item.variant ? item.variant.price : item.menuItem.price!;
 
             return (
@@ -108,7 +104,6 @@ export default function CartPage({
                       {item.menuItem.name}
                     </h3>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      {/* Backend uses 'label' for variants */}
                       {item.variant ? item.variant.label : 'Standard'}
                     </p>
                     <div className="mt-1 font-bold text-brand-red">

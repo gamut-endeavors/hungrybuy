@@ -67,7 +67,6 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
           </div>
 
           {/* RIGHT: Table Indicator or QR Button */}
-          {/* Changed div to button for interactivity */}
           <button 
             onClick={() => setIsScannerOpen(true)}
             className={`
@@ -81,7 +80,6 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
                 <span className="text-base font-black text-brand-dark -mt-0.5">{tableNo}</span>
               </div>
             ) : (
-              // Added color to make it look active
               <QrCode size={20} className="text-brand-dark" /> 
             )}
           </button>

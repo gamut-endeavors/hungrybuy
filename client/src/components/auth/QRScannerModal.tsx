@@ -38,15 +38,14 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
           scanDelay={500}
           allowMultiple={false}
           sound={false}
-          // FIX: 'audio' is removed. Use top-level 'sound={false}' if explicitly needed (default is false).
           components={{
-            onOff: false,  // This shows the camera toggle button
+            onOff: false, 
             torch: true,
             zoom: false,
             finder: false,
           }}
           constraints={{
-            facingMode: 'environment' // Forces back camera
+            facingMode: 'environment'
           }}
           styles={{
             container: { width: '100%', height: '100%' }
