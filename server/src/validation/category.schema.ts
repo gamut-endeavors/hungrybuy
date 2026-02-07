@@ -7,7 +7,7 @@ export const CreateCategoryBody = z.object({
 export type CreateCategoryBody = z.infer<typeof CreateCategoryBody>;
 
 export const DeleteCategoryParams = z.object({
-  id: z.string(),
+  id: z.uuidv4(),
 });
 
 export type DeleteCategoryParams = z.infer<typeof DeleteCategoryParams>;

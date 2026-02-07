@@ -8,9 +8,9 @@ export const AdminLoginBody = z.object({
 export type AdminLoginBody = z.infer<typeof AdminLoginBody>;
 
 export const CreateShopBody = z.object({
-  name: z.string(),
+  name: z.string().optional(),
   email: z.email(),
-  password: z.string().min(3).max(32),
+  password: z.string().min(8).max(32),
 });
 
 export type CreateShopBody = z.infer<typeof CreateShopBody>;

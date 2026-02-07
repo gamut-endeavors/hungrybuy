@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const UpdateOrderParams = z.object({
-  orderId: z.string(),
+  orderId: z.uuidv4(),
 });
 
 export type UpdateOrderParams = z.infer<typeof UpdateOrderParams>;
@@ -13,13 +13,13 @@ export const UpdateOrderStatusBody = z.object({
 export type UpdateOrderStatusBody = z.infer<typeof UpdateOrderStatusBody>;
 
 export const ActiveOrdersParams = z.object({
-  tableId: z.string(),
+  tableId: z.uuidv4(),
 });
 
 export type ActiveOrdersParams = z.infer<typeof ActiveOrdersParams>;
 
 export const CreateOrderParams = z.object({
-  tableId: z.string(),
+  tableId: z.uuidv4(),
 });
 
 export type CreateOrderParams = z.infer<typeof CreateOrderParams>;

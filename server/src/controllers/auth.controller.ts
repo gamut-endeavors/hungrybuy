@@ -16,7 +16,6 @@ export async function registerUser(
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // -- -- -- -- -- check if user exists -- -- -- -- --
     const user = await prisma.user.findUnique({
       where: {
         phone,
@@ -27,7 +26,6 @@ export async function registerUser(
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // -- -- -- -- -- create the user -- -- -- -- --
     const newUser = await prisma.user.create({
       data: {
         name: name ?? "world",
@@ -35,7 +33,6 @@ export async function registerUser(
       },
     });
 
-    // -- -- -- -- -- sign jwt -- -- -- -- --
     const token = signJwt({ id: newUser.id, role: newUser.role });
 
     return res.status(201).json({
@@ -56,7 +53,6 @@ export async function loginUser(
   try {
     const { phone, otp } = req.body;
 
-    // -- -- -- -- -- check if user exists -- -- -- -- --
     const user = await prisma.user.findUnique({
       where: {
         phone,
@@ -67,12 +63,10 @@ export async function loginUser(
       return registerUser(req, res);
     }
 
-    // -- -- -- -- -- verify otp -- -- -- -- --
     if (verifyOtp(phone, otp) === false) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // -- -- -- -- -- sign jwt -- -- -- -- --
     const token = signJwt({ id: user.id, role: user.role });
 
     return res.status(200).json({

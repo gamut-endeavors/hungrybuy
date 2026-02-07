@@ -13,8 +13,8 @@ export const AddCartParams = z.object({
 export type AddCartParams = z.infer<typeof AddCartParams>;
 
 export const AddCartBody = z.object({
-  menuItemId: z.string(),
-  variantId: z.string().optional(),
+  menuItemId: z.uuidv4(),
+  variantId: z.uuidv4().optional(),
   quantity: z.number().int().min(0),
 });
 
