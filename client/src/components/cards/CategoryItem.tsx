@@ -23,7 +23,6 @@ export default function CategoryItem({ name, image, isActive, onClick }: Props) 
             : 'bg-white border-transparent hover:border-red-200' 
           }
       `}>
-         {/* FIX: Only show this text if 'image' is missing or empty */}
          {(!image || image === "") && (
            <div className={`relative z-10 text-xs font-bold ${isActive ? 'text-white' : 'text-brand-red'}`}>
              {name}

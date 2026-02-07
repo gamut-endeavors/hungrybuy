@@ -2,27 +2,29 @@
 
 import Header from "@/components/layout/Header";
 import SectionTitle from "@/components/ui/SectionTitle";
-import CategoryItem from "@/components/cards/CategoryItem";
-import ProductCard from "@/components/cards/ProductCard";
+import Categories from "@/components/sections/Categories";
+import FeaturedProducts from "@/components/sections/FeaturedProducts";
 import ProductDialog from "@/components/ui/ProductDialog";
 import DietFilter from "@/components/ui/DietFilter";
-import CartPage from "@/components/ui/CartPage";
-// import { CATEGORIES } from "@/lib/constants";
+import Loading from "@/components/other/Loading";
 import { Product, Category } from "@/lib/types";
-import { useState, useEffect, Suspense, use } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useCart } from "@/context/CartContext";
 import { api } from "@/lib/api";
 import QRHandler from "@/components/auth/QRHandler";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { useApiAuthError } from "@/hooks/useApiAuthError";
+import Section from "@/components/layout/Section";
+
+
 
 export default function Home() {
 
 
   const router = useRouter();
-  // const [isAuthorized, setIsAuthorized] = useState(false);
   const { isLoading, user } = useAuth();
+  const { handleAuthError } = useApiAuthError();
 
   const [dietFilter, setDietFilter] = useState<"all" | "veg" | "non-veg">(
     "all",
@@ -33,28 +35,10 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
 
-  const { cart, addToCart, updateQuantity, placeOrder } = useCart();
+  const { cart, addToCart, updateQuantity } = useCart();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [currentView, setCurrentView] = useState<"HOME" | "CART">("HOME");
-
-  // useEffect(() => {
-
-  //   const hasQueryParams = window.location.search.length > 0;
-
-  //   const token = localStorage.getItem("token");
-
-  //   if (!token && !hasQueryParams) {
-  //     router.push("/login");
-  //   } else {
-  //     setIsAuthorized(true);
-  //   }
-  // }, [router]);
-
-
-  // --- 1. Simplified Fetch (Matches Backend Directly) ---
-
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -63,7 +47,6 @@ export default function Home() {
   }, [isLoading, user, router]);
 
   useEffect(() => {
-    // if (!isAuthorized) return;
     if (!user) return;
 
     const fetchMenu = async () => {
@@ -79,13 +62,7 @@ export default function Home() {
 
         setProducts(readyProducts);
       } catch (error) {
-        const err = error as AxiosError<{ message: string }>;
-        console.error("Failed to load menu", err);
-
-        if (err.response && err.response.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
-        }
+        handleAuthError(error, "Failed to load menu");
       } finally {
         setIsMenuLoading(false);
       }
@@ -98,47 +75,17 @@ export default function Home() {
         setCategories(dbCategories);
 
       } catch (error) {
-        const err = error as AxiosError<{ message: string }>;
-        console.error("Failed to load categories", err);
-
-        if (err.response && err.response.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
-        }
+        handleAuthError(error, "Failed to load categories");
       }
     }
 
     fetchMenu();
     fetchCategoreies();
 
-  }, [user, router]);
+  }, [user, router, handleAuthError]);
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50">
-        
-      
-        <div className="relative flex items-center justify-center">
-          
-          <span className="absolute inline-flex h-20 w-20 animate-ping rounded-full bg-brand-red opacity-20 duration-1000"></span>
-          <span className="absolute inline-flex h-16 w-16 animate-ping rounded-full bg-brand-red opacity-30 delay-150 duration-1000"></span>
-          
-         
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-brand-red shadow-xl shadow-red-200 ring-4 ring-white">
-          
-            <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white border-t-transparent" />
-          </div>
-        </div>
-        <div className="mt-8 flex flex-col items-center gap-1">
-          <h2 className="animate-pulse text-lg font-black tracking-tight text-gray-800">
-            HungryBuy
-          </h2>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-gray-400">
-            Verifying Access...
-          </p>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!user) return null;
@@ -164,7 +111,6 @@ export default function Home() {
 
   // --- Event Handlers ---
   const increaseSingleItem = async (product: Product) => {
-    console.log(product)
     await addToCart(product.id, 1);
   };
 
@@ -175,12 +121,10 @@ export default function Home() {
     }
   };
 
-  // Updated to use 'variants' and 'label' (Backend Terms)
   const handleDialogSave = async (quantities: Record<string, number>) => {
     if (!selectedProduct) return;
 
     for (const [variantLabel, newQty] of Object.entries(quantities)) {
-      // CHANGE: Use 'variants' and 'label'
       const variantObj = selectedProduct.variants?.find(
         (v) => v.label === variantLabel,
       );
@@ -198,16 +142,6 @@ export default function Home() {
     }
   };
 
-  const handleCartIncrease = async (cartItemId: string) => {
-    const item = cart.find((i) => i.id === cartItemId);
-    if (item) await updateQuantity(cartItemId, item.quantity + 1);
-  };
-
-  const handleCartDecrease = async (cartItemId: string) => {
-    const item = cart.find((i) => i.id === cartItemId);
-    if (item) await updateQuantity(cartItemId, item.quantity - 1);
-  };
-
   const handleCardAddClick = (product: Product) => {
     if (product.variants && product.variants.length > 0) {
       setSelectedProduct(product);
@@ -217,20 +151,11 @@ export default function Home() {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    try {
-      await placeOrder();
-      // On success, go back to HOME view
-      setCurrentView("HOME");
-    } catch { }
-  };
 
   // --- 2. Updated Filter Logic ---
   const filteredProducts = products.filter((product) => {
-    // Translate UI ('veg') to Backend Enum ('VEG')
     const targetFoodType = dietFilter === "veg" ? "VEG" : "NON_VEG";
 
-    // CHANGE: Check 'foodType' instead of 'category'
     const matchesDiet =
       dietFilter === "all" || product.foodType === targetFoodType;
     const matchesCategory =
@@ -245,130 +170,71 @@ export default function Home() {
         <QRHandler />
       </Suspense>
 
-      {/* <div className="">
-        <TableStatus />
-      </div> */}
-
-      {currentView === "CART" ? (
-        <CartPage
-          cartItems={cart}
-          onBack={() => setCurrentView("HOME")}
-          onIncrease={handleCartIncrease}
-          onDecrease={handleCartDecrease}
-          onPlaceOrder={handlePlaceOrder}
-          totalAmount={cart.reduce((sum, item) => {
-            const price = item.variant
-              ? item.variant.price
-              : item.menuItem.price || 0;
-            // Handle Cents if needed (divide by 100)
-            // const realPrice = price / 100;
-            return sum + price * item.quantity;
-          }, 0)}
-        />
-      ) : (
-        <>
-          <div
-            className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col`}
-          >
-            <div className="px-4 shrink-0">
-              <Header
-                cartCount={getTotalCartCount()}
-                onCartClick={() => setCurrentView("CART")}
-              />
-              <div className="">
-                <DietFilter
-                  activeFilter={dietFilter}
-                  onFilterChange={setDietFilter}
-                />
-              </div>
-            </div>
-
-            <div className="px-4 flex flex-col">
-              <section className="mb-2">
-                <SectionTitle title="Categories" />
-                <div className="flex justify-start overflow-x-auto pb-4 scrollbar-hide gap-4">
-                  <CategoryItem
-                    id="all"
-                    name="All"
-                    image=""
-                    isActive={selectedCategory === "all"}
-                    onClick={() => setSelectedCategory("all")}
-                  />
-                  {categories.map((cat) => (
-                    <CategoryItem
-                      key={cat.id}
-                      {...cat}
-                      isActive={selectedCategory === cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                    />
-                  ))}
-                </div>
-              </section>
-
-              <section>
-                <SectionTitle title="Featured Product" />
-                <div className="flex flex-col gap-3 pb-safe">
-                  {isMenuLoading && (
-                    <p className="text-center text-sm text-gray-500 py-10">
-                      Loading menu...
-                    </p>
-                  )}
-
-                  {!isMenuLoading && filteredProducts.length > 0
-                    ? filteredProducts.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        cartQty={getProductTotalQty(product.id)}
-                        onAddClick={() => handleCardAddClick(product)}
-                        onIncrease={() => increaseSingleItem(product)}
-                        onDecrease={() => decreaseSingleItem(product.id)}
-                      />
-                    ))
-                    : !isMenuLoading && (
-                      <div className="py-10 text-center opacity-50">
-                        <p className="text-gray-500 font-medium">
-                          No items found
-                        </p>
-                        <button
-                          onClick={() => {
-                            setDietFilter("all");
-                            setSelectedCategory("all");
-                          }}
-                          className="mt-2 text-brand-red text-xs underline"
-                        >
-                          Clear Filters
-                        </button>
-                      </div>
-                    )}
-                </div>
-              </section>
-            </div>
-          </div>
-
-          <ProductDialog
-            key={selectedProduct?.id ? `${selectedProduct.id}-${isDialogOpen}` : 'dialog-reset'}
-            isOpen={isDialogOpen}
-            product={selectedProduct}
-            initialData={
-              selectedProduct
-                ? cart
-                  .filter((i) => i.menuItem.id === selectedProduct.id)
-                  .reduce(
-                    (acc, item) => {
-                      if (item.variant)
-                        acc[item.variant.label] = item.quantity;
-                      return acc;
-                    },
-                    {} as Record<string, number>,
-                  )
-                : {}
-            }
-            onClose={() => setIsDialogOpen(false)}
-            onSave={handleDialogSave}
+      <div
+        className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col`}
+      >
+        <div className="px-4 shrink-0">
+          <Header
+            cartCount={getTotalCartCount()}
+            onCartClick={() => router.push("/cart")}
           />
-        </>
-      )}
+          <div className="">
+            <DietFilter
+              activeFilter={dietFilter}
+              onFilterChange={setDietFilter}
+            />
+          </div>
+        </div>
+
+        <div className="px-4 flex flex-col">
+          <Section className="mb-2">
+            <SectionTitle title="Categories" />
+            <Categories
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+          </Section>
+
+          <Section>
+            <SectionTitle title="Featured Product" />
+            <FeaturedProducts
+              products={filteredProducts}
+              isLoading={isMenuLoading}
+              getProductTotalQty={getProductTotalQty}
+              onAddClick={handleCardAddClick}
+              onIncrease={increaseSingleItem}
+              onDecrease={decreaseSingleItem}
+              onClearFilters={() => {
+                setDietFilter("all");
+                setSelectedCategory("all");
+              }}
+            />
+          </Section>
+        </div>
+      </div>
+
+      <ProductDialog
+        key={selectedProduct?.id ? `${selectedProduct.id}-${isDialogOpen}` : 'dialog-reset'}
+        isOpen={isDialogOpen}
+        product={selectedProduct}
+        initialData={
+          selectedProduct
+            ? cart
+              .filter((i) => i.menuItem.id === selectedProduct.id)
+              .reduce(
+                (acc, item) => {
+                  if (item.variant)
+                    acc[item.variant.label] = item.quantity;
+                  return acc;
+                },
+                {} as Record<string, number>,
+              )
+            : {}
+        }
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleDialogSave}
+      />
     </main>
   );
 }

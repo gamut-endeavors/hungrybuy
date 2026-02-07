@@ -187,7 +187,6 @@ export default function AdminDashboard() {
       setIsProductModalOpen(false);
       setEditingProduct(null);
     } else {
-      // Access the error message from the rejected action if available
       const errorMsg = result.payload as string || "Failed to save product";
       alert(errorMsg);
     }

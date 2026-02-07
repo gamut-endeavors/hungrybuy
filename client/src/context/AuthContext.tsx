@@ -1,8 +1,7 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react'; // Added useEffect back for router if needed, but removed for init
+import { createContext, useContext, useEffect, useState } from 'react'; 
 import { useRouter } from 'next/navigation';
-// import { api } from '@/lib/api';
 
 interface User {
   name: string;
@@ -44,23 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setIsLoading(false); // Assume token is valid for now, or handle actual verification if needed
+      setIsLoading(false); 
 
-      
-
-      // try {
-      //   const response = await api.get('/menu');
-      //   setUser(response.data.user);
-      // } catch (error) {
-      //   console.error("Token verification failed:", error);
-      //   // 5. If API fails (401), Logout
-      //   localStorage.removeItem('token');
-      //   localStorage.removeItem('user');
-      //   setUser(null);
-      // } finally {
-      //   // 6. ALWAYS finish loading, whether success or fail
-      //   setIsLoading(false);
-      // }
     };
 
     verifyToken();

@@ -4,7 +4,7 @@ export const CreateMenuBody = z.object({
   name: z.string(),
   foodType: z.enum(["VEG", "NON_VEG"]),
   categoryId: z.uuidv4(),
-  price: z.number().optional(),
+  price: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -49,7 +49,7 @@ export type CreateVariantParams = z.infer<typeof CreateVariantParams>;
 
 export const CreateVariantBody = z.object({
   label: z.string(),
-  price: z.number(),
+  price: z.string()
 });
 
 export type CreateVariantBody = z.infer<typeof CreateVariantBody>;

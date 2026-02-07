@@ -61,9 +61,10 @@ export const addProduct = createAsyncThunk(
     'menu/add',
     async ({ itemData, variants }: AddProductThunkPayload, { rejectWithValue, dispatch }) => {
         try {
+
             // 1. Create Main Item (Sends Multipart/Form-Data)
             const itemResponse = await api.post('/menu/create', itemData, {
-                headers: { 'Content-Type': 'multipart/form-data' }, // Crucial for Multer
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             const newItem = itemResponse.data.data.item;
@@ -73,7 +74,7 @@ export const addProduct = createAsyncThunk(
                 await Promise.all(variants.map(variant =>
                     api.post(`/menu/${newItem.id}/variants`, {
                         label: variant.label,
-                        price: variant.price
+                        price: Number(variant.price)
                     })
                 ));
             }
@@ -114,8 +115,8 @@ export const updateProduct = createAsyncThunk(
             // C. Execute API Calls
             await Promise.all([
                 ...toDelete.map(v => api.delete(`/menu/${id}/variants/${v.id}`)),
-                ...toAdd.map(v => api.post(`/menu/${id}/variants`, { label: v.label, price: v.price })),
-                ...toUpdate.map(v => api.patch(`/menu/${id}/variants/${v.id}`, { label: v.label, price: v.price }))
+                ...toAdd.map(v => api.post(`/menu/${id}/variants`, { label: v.label, price: Number(v.price) })),
+                ...toUpdate.map(v => api.patch(`/menu/${id}/variants/${v.id}`, { label: v.label, price: Number(v.price) }))
             ]);
 
             dispatch(fetchProducts());
