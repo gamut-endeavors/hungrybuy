@@ -26,7 +26,7 @@ export async function createMenuItem(
 
     let image: string | null = null;
     if (req.file) {
-      image = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+      image = `/uploads/${req.file.filename}`;
     }
 
     const item = await prisma.menuItem.create({
@@ -98,7 +98,7 @@ export async function updateMenuItem(
     if (req.file) {
       deleteFileByUrl(item.image);
 
-      newImage = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+      newImage = `/uploads/${req.file.filename}`;
     }
 
     const updatedItem = await prisma.menuItem.update({
