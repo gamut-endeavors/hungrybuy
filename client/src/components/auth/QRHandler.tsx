@@ -8,8 +8,6 @@ export default function QRHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { resolveTableFromToken } = useCart();
-
-  // Prevent double-firing in React strict mode
   const processedRef = useRef(false);
 
   useEffect(() => {

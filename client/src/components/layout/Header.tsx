@@ -10,12 +10,13 @@ interface HeaderProps {
   onCartClick?: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSearchFocus?: () => void;
 }
 
-export default function Header({ cartCount = 0, onCartClick, searchQuery, onSearchChange }: HeaderProps) {
+export default function Header({ cartCount = 0, onCartClick, searchQuery, onSearchChange , onSearchFocus}: HeaderProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const { tableId, tableNo } = useCart();
+  const { tableToken, tableNo } = useCart();
 
   const handleScan = (scannedUrl: string) => {
     try {
@@ -65,6 +66,7 @@ export default function Header({ cartCount = 0, onCartClick, searchQuery, onSear
               placeholder="Search food..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              onFocus={onSearchFocus}
               className="w-full h-12 bg-white rounded-full pl-6 pr-10 text-sm text-gray-600 outline-none border border-transparent focus:border-brand-red transition-all shadow-sm placeholder:text-gray-400"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -75,10 +77,10 @@ export default function Header({ cartCount = 0, onCartClick, searchQuery, onSear
             onClick={() => setIsScannerOpen(true)}
             className={`
               w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm border transition-all relative bg-white
-              ${tableId ? 'border-green-200' : 'border-transparent active:scale-95 hover:bg-gray-50 cursor-pointer'}
+              ${tableToken ? 'border-green-200' : 'border-transparent active:scale-95 hover:bg-gray-50 cursor-pointer'}
             `}
           >
-            {tableId ? (
+            {tableToken ? (
               <div className="flex flex-col items-center leading-none">
                 <span className="text-[7px] font-bold text-gray-400 uppercase tracking-wide">Table</span>
                 <span className="text-base font-black text-brand-dark -mt-0.5">{tableNo}</span>
