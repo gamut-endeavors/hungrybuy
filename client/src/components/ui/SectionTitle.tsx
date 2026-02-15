@@ -1,8 +1,7 @@
-// components/ui/SectionTitle.tsx
 interface Props {
   title: string;
   actionText?: string;
-  onActionClick?: () => void; // Add this prop
+  onActionClick?: () => void;
 }
 
 export default function SectionTitle({ 

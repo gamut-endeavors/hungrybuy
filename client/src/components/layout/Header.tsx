@@ -10,9 +10,10 @@ interface HeaderProps {
   onCartClick?: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSearchFocus?: () => void;
 }
 
-export default function Header({ cartCount = 0, onCartClick, searchQuery, onSearchChange }: HeaderProps) {
+export default function Header({ cartCount = 0, onCartClick, searchQuery, onSearchChange , onSearchFocus}: HeaderProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { tableId, tableNo } = useCart();
@@ -65,6 +66,7 @@ export default function Header({ cartCount = 0, onCartClick, searchQuery, onSear
               placeholder="Search food..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              onFocus={onSearchFocus}
               className="w-full h-12 bg-white rounded-full pl-6 pr-10 text-sm text-gray-600 outline-none border border-transparent focus:border-brand-red transition-all shadow-sm placeholder:text-gray-400"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />

@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
 import Section from "@/components/layout/Section";
+import { ArrowLeft } from "lucide-react";
 
 
 
@@ -25,6 +26,8 @@ export default function Home() {
   const router = useRouter();
   const { isLoading, user } = useAuth();
   const { handleAuthError } = useApiAuthError();
+
+  const [isViewAll, setIsViewAll] = useState(false);
 
   const [dietFilter, setDietFilter] = useState<"all" | "veg" | "non-veg">(
     "all",
@@ -185,39 +188,59 @@ export default function Home() {
             onCartClick={() => router.push("/cart")}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onSearchFocus={() => setIsViewAll(true)}
           />
-          <div className="">
-            <DietFilter
-              activeFilter={dietFilter}
-              onFilterChange={setDietFilter}
-            />
-          </div>
+          {!isViewAll && (
+            <div>
+              <DietFilter activeFilter={dietFilter} onFilterChange={setDietFilter} />
+            </div>
+          )}
+
+          {isViewAll && (
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                onClick={() => setIsViewAll(false)}
+                className="flex items-center gap-1 text-sm font-bold text-gray-500 hover:text-brand-red"
+              >
+                <ArrowLeft size={16} /> Back to Home
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="px-4 flex flex-col">
-          <Section className="mb-2">
-            <SectionTitle title="Categories" />
-            <Categories
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
-          </Section>
+          {!isViewAll && (
+            <Section className="mb-2">
+              <SectionTitle title="Categories" />
+              <Categories
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+            </Section>
+          )}
 
           <Section>
-            <SectionTitle title="Featured Product" />
-            <FeaturedProducts
-              products={filteredProducts}
-              isLoading={isMenuLoading}
-              getProductTotalQty={getProductTotalQty}
-              onAddClick={handleCardAddClick}
-              onIncrease={increaseSingleItem}
-              onDecrease={decreaseSingleItem}
-              onClearFilters={() => {
-                setDietFilter("all");
-                setSelectedCategory("all");
-              }}
+            <SectionTitle
+              title={isViewAll ? "All Products" : "Featured Product"}
+              actionText={isViewAll ? "" : "See all"}
+              onActionClick={isViewAll ? undefined : () => setIsViewAll(true)}
             />
+            <div className={isViewAll ? "pb-safe min-h-screen" : ""}>
+              <FeaturedProducts
+                products={filteredProducts}
+                isLoading={isMenuLoading}
+                getProductTotalQty={getProductTotalQty}
+                onAddClick={handleCardAddClick}
+                onIncrease={increaseSingleItem}
+                onDecrease={decreaseSingleItem}
+                onClearFilters={() => {
+                  setDietFilter("all");
+                  setSelectedCategory("all");
+                  setSearchQuery("");
+                }}
+              />
+            </div>
           </Section>
         </div>
       </div>
