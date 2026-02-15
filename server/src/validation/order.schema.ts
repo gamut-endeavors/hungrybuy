@@ -1,3 +1,4 @@
+import { OrderStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const UpdateOrderParams = z.object({
@@ -7,7 +8,9 @@ export const UpdateOrderParams = z.object({
 export type UpdateOrderParams = z.infer<typeof UpdateOrderParams>;
 
 export const UpdateOrderStatusBody = z.object({
-  status: z.enum(["PENDING", "CANCELLED", "SERVED", "PAID"]),
+  status: z
+    .enum(Object.values(OrderStatus) as [OrderStatus, ...OrderStatus[]])
+    .optional(),
 });
 
 export type UpdateOrderStatusBody = z.infer<typeof UpdateOrderStatusBody>;
