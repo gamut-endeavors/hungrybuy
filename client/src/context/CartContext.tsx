@@ -39,9 +39,9 @@ type CartContextType = {
   cart: CartItem[];
   isLoading: boolean;
   totalAmount: number;
-  tableId: string | null;
+  tableToken: string | null;
   tableNo: number;
-  setTable: ({ id, no }: { id: string; no: number }) => void;
+  setTable: ({ token, no }: { token: string; no: number }) => void;
   resolveTableFromToken: (token: string) => Promise<void>;
   addToCart: (
     menuItemId: string,
@@ -58,26 +58,37 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [tableId, setTableIdState] = useState<string | null>(null);
+  const [tableToken, setTableTokenState] = useState<string | null>(null);
   const [tableNo, setTableNo] = useState<number>(0);
 
-  // 1. Fetch Cart when tableId changes
+  const updateApiToken = (token: string | null) => {
+    if (token) {
+      api.defaults.headers.common["x-table-token"] = token;
+    } else {
+      delete api.defaults.headers.common["x-table-token"];
+    }
+  };
+
+  // 1. Fetch Cart when tableToken changes
   useEffect(() => {
     const storedTable = localStorage.getItem("table");
     if (storedTable) {
-      const parsedTable = JSON.parse(storedTable);
-      setTableIdState(parsedTable.id);
-      setTableNo(parsedTable.no);
-      fetchCart(parsedTable.id);
+      const { token, no } = JSON.parse(storedTable);
+
+      setTableTokenState(token);
+      setTableNo(no);
+
+      updateApiToken(token);
+      fetchCart();
     }
   }, []);
 
 
-  const setTable = ({ id, no }: { id: string; no: number }) => {
-    setTableIdState(id);
+  const setTable = ({ token, no }: { token: string; no: number }) => {
+    setTableTokenState(token);
     setTableNo(no);
-    localStorage.setItem("table", JSON.stringify({id, no}));
-    fetchCart(id);
+    localStorage.setItem("table", JSON.stringify({ token, no }));
+    fetchCart();
   };
 
   const resolveTableFromToken = async (token: string) => {
@@ -85,13 +96,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const res = await api.get(`/table/qr/${token}`);
 
-      const resolvedTable = res.data.data.table;
+      const resolvedTable = res.data.data;
 
-      const tableId = resolvedTable.id;
-      const tableNo = resolvedTable.number;
+      const tableToken = resolvedTable.tableToken;
+      const tableNo = resolvedTable.tableNumber;
 
-      if (tableId) {
-        setTable({ id: tableId, no: tableNo });
+      console.log(resolvedTable);
+
+      if (tableToken && tableNo) {
+        setTable({ token: tableToken, no: tableNo });
         toast.success("Connected to table!");
       }
     } catch (error) {
@@ -102,10 +115,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchCart = async (tid: string) => {
+  const fetchCart = async () => {
     setIsLoading(true);
     try {
-      const res = await api.get(`/cart/${tid}`);
+      const res = await api.get(`/cart`);
       setCart(res.data.data.cart);
     } catch (error) {
       console.error("Fetch Cart Error:", error);
@@ -120,7 +133,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     quantity: number,
     variantId?: string,
   ) => {
-    if (!tableId) {
+    if (!tableToken) {
       toast.error("No table selected!");
       return;
     }
@@ -135,13 +148,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         ? existingItem.quantity + quantity
         : quantity;
 
-      await api.post(`/cart/add-to-cart/${tableId}`, {
+      await api.post(`/cart/add`, {
         menuItemId,
         variantId,
         quantity: finalQuantity,
       });
 
-      await fetchCart(tableId);
+      await fetchCart();
       toast.success("Added to cart!");
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
@@ -168,7 +181,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch {
       toast.error("Failed to update cart");
       // Revert fetch on error
-      if (tableId) fetchCart(tableId);
+      if (tableToken) fetchCart();
     }
   };
 
@@ -182,19 +195,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       toast.success("Item removed");
     } catch {
       toast.error("Failed to remove item");
-      if (tableId) fetchCart(tableId);
+      if (tableToken) fetchCart();
     }
   };
 
   const placeOrder = async () => {
-    if (!tableId) {
-      toast.error("Table ID missing!");
-      throw new Error("No Table ID");
+    if (!tableToken) {
+      toast.error("Table Token missing!");
+      throw new Error("No Table Token");
     }
 
     try {
-      await api.post(`/order/create/${tableId}`);
-
+      await api.post(`/order/create`);
       // Success: Clear local cart immediately
       setCart([]);
       toast.success("Order placed successfully!");
@@ -202,7 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("Place Order Error:", error);
       const err = error as AxiosError<{ message: string }>;
       toast.error(err.response?.data?.message || "Failed to place order");
-      throw error; 
+      throw error;
     }
   };
 
@@ -218,7 +230,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         cart,
         isLoading,
         totalAmount,
-        tableId,
+        tableToken,
         tableNo,
         setTable,
         resolveTableFromToken,
