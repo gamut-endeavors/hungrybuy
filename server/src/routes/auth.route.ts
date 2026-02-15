@@ -2,8 +2,7 @@ import { Router } from "express";
 import { loginUser } from "../controllers/auth.controller";
 import { sendOtp } from "../controllers/otp.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { LoginUserBody } from "../validation/auth.schema";
-import { SendOtpBody } from "../validation/otp.schema";
+import { LoginUserBody, SendOtpBody } from "../validation/auth.schema";
 
 const router = Router();
 

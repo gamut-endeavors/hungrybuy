@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { canRequestOtp, generateOtp, saveOtp } from "../utils/otpStore";
 import { TypedRequest } from "../types/request";
-import { SendOtpBody } from "../validation/otp.schema";
+import { SendOtpBody } from "../validation/auth.schema";
 
 export async function sendOtp(
   req: TypedRequest<{}, SendOtpBody, {}>,
