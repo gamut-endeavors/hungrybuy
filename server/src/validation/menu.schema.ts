@@ -1,12 +1,9 @@
-import { FoodType } from "@prisma/client";
 import { z } from "zod";
 
 export const CreateMenuBody = z.object({
   name: z.string().trim().toLowerCase().min(2).max(50),
   description: z.string().trim().max(300).optional(),
-  foodType: z
-    .enum(Object.values(FoodType) as [FoodType, ...FoodType[]])
-    .optional(),
+  foodType: z.enum(["VEG", "NON_VEG"]),
   categoryId: z.uuidv4(),
   price: z.coerce.number().min(0).max(100000).optional(),
 });
@@ -15,9 +12,7 @@ export type CreateMenuBody = z.infer<typeof CreateMenuBody>;
 
 export const GetMenuQuery = z.object({
   categoryId: z.uuidv4().optional(),
-  foodType: z
-    .enum(Object.values(FoodType) as [FoodType, ...FoodType[]])
-    .optional(),
+  foodType: z.enum(["VEG", "NON_VEG"]).optional(),
   search: z
     .string()
     .trim()
@@ -39,9 +34,7 @@ export const UpdateMenuItemsBody = z.object({
   name: z.string().trim().toLowerCase().min(2).max(50).optional(),
   description: z.string().trim().max(300).optional(),
   price: z.coerce.number().min(0).max(100000).optional(),
-  foodType: z
-    .enum(Object.values(FoodType) as [FoodType, ...FoodType[]])
-    .optional(),
+  foodType: z.enum(["VEG", "NON_VEG"]).optional(),
   categoryId: z.uuidv4().optional(),
   isAvailable: z.coerce.boolean().optional(),
 });

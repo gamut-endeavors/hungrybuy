@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { prisma } from "../lib/prisma";
-import { FoodType, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { deleteFileByUrl } from "../utils/file";
 import { TypedRequest } from "../types/request";
 import {
@@ -33,7 +33,7 @@ export async function getMenu(
       where: {
         isAvailable: true,
         ...(categoryId && { categoryId: String(categoryId) }),
-        ...(foodType && { foodType: foodType as FoodType }),
+        ...(foodType && { foodType: foodType }),
         ...(searchText && {
           name: { contains: searchText, mode: "insensitive" },
         }),
