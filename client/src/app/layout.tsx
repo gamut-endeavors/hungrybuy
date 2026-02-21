@@ -12,7 +12,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Food App",
+  title: "Hungrybuy",
   description: "Order your favorite food",
 };
 

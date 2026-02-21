@@ -39,7 +39,26 @@ export async function getMenu(
         }),
       },
       orderBy: { name: "asc" },
-      include: { category: true, variants: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        image: true,
+        foodType: true,
+        isAvailable: true,
+        categoryId: true,
+        category: {
+          select: { id: true, name: true },
+        },
+        variants: {
+          select: {
+            id: true,
+            label: true,
+            price: true,
+          },
+        },
+      },
     });
 
     return res.status(200).json({
@@ -61,6 +80,7 @@ export async function createMenuItem(
 
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
+      select: { id: true },
     });
 
     if (!category) {
@@ -80,6 +100,16 @@ export async function createMenuItem(
         foodType,
         categoryId,
         image,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        image: true,
+        foodType: true,
+        isAvailable: true,
+        categoryId: true,
       },
     });
 
@@ -103,6 +133,7 @@ export async function updateMenuItem(
 
     const item = await prisma.menuItem.findUnique({
       where: { id },
+      select: { id: true, image: true },
     });
 
     if (!item) {
@@ -111,6 +142,7 @@ export async function updateMenuItem(
 
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
+      select: { id: true },
     });
 
     if (!category) {
@@ -134,6 +166,16 @@ export async function updateMenuItem(
         ...(categoryId !== undefined && { categoryId }),
         ...(isAvailable !== undefined && { isAvailable: isAvailable }),
         ...(newImage !== undefined && { image: newImage }),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        image: true,
+        foodType: true,
+        isAvailable: true,
+        categoryId: true,
       },
     });
 
@@ -159,6 +201,7 @@ export async function deleteMenuItem(
 
     const item = await prisma.menuItem.findUnique({
       where: { id },
+      select: { id: true, image: true },
     });
 
     if (!item) {
@@ -188,6 +231,7 @@ export async function getAllVariants(
 
     const menuItem = await prisma.menuItem.findUnique({
       where: { id: menuItemId },
+      select: { id: true },
     });
 
     if (!menuItem) {
@@ -197,6 +241,12 @@ export async function getAllVariants(
     const variants = await prisma.menuVariant.findMany({
       where: { menuItemId },
       orderBy: { price: "asc" },
+      select: {
+        id: true,
+        label: true,
+        price: true,
+        menuItemId: true,
+      },
     });
 
     return res
@@ -218,6 +268,7 @@ export async function createVariant(
 
     const menuItem = await prisma.menuItem.findUnique({
       where: { id: menuItemId },
+      select: { id: true },
     });
 
     if (!menuItem) {
@@ -229,6 +280,12 @@ export async function createVariant(
         label,
         price: new Prisma.Decimal(price),
         menuItemId,
+      },
+      select: {
+        id: true,
+        label: true,
+        price: true,
+        menuItemId: true,
       },
     });
 
@@ -269,6 +326,12 @@ export async function updateVariant(
 
     const updatedVariant = await prisma.menuVariant.findUnique({
       where: { id: variantId },
+      select: {
+        id: true,
+        label: true,
+        price: true,
+        menuItemId: true,
+      },
     });
 
     return res.status(200).json({

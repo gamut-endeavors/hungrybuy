@@ -14,9 +14,27 @@ export async function getCart(req: TypedRequest, res: Response) {
 
     const cart = await prisma.cartItem.findMany({
       where: { tableId },
-      include: {
-        menuItem: true,
-        variant: true,
+      select: {
+        id: true,
+        quantity: true,
+        menuItem: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            image: true,
+            description: true,
+            foodType: true,
+            isAvailable: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            label: true,
+            price: true,
+          },
+        },
       },
     });
 
@@ -39,6 +57,7 @@ export async function addToCart(
 
     const menuItem = await prisma.menuItem.findUnique({
       where: { id: menuItemId },
+      select: { id: true, isAvailable: true },
     });
 
     if (!menuItem) {
@@ -60,6 +79,7 @@ export async function addToCart(
     if (variantId) {
       const variant = await prisma.menuVariant.findFirst({
         where: { id: variantId, menuItemId },
+        select: { id: true },
       });
 
       if (!variant) {
@@ -77,15 +97,34 @@ export async function addToCart(
         menuItemId,
         variantId: variantId ?? null,
       },
+      select: { id: true },
     });
 
     if (cartItem) {
       const updatedCart = await prisma.cartItem.update({
         where: { id: cartItem.id },
         data: { quantity },
-        include: {
-          menuItem: true,
-          variant: true,
+        select: {
+          id: true,
+          quantity: true,
+          menuItem: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              image: true,
+              description: true,
+              foodType: true,
+              isAvailable: true,
+            },
+          },
+          variant: {
+            select: {
+              id: true,
+              label: true,
+              price: true,
+            },
+          },
         },
       });
 
@@ -101,9 +140,27 @@ export async function addToCart(
         variantId: variantId ?? null,
         quantity,
       },
-      include: {
-        menuItem: true,
-        variant: true,
+      select: {
+        id: true,
+        quantity: true,
+        menuItem: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            image: true,
+            description: true,
+            foodType: true,
+            isAvailable: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            label: true,
+            price: true,
+          },
+        },
       },
     });
 
@@ -127,7 +184,10 @@ export async function updateCart(
 
     const cart = await prisma.cartItem.findUnique({
       where: { id: cartId },
-      include: { menuItem: true },
+      select: {
+        tableId: true,
+        menuItem: { select: { isAvailable: true } },
+      },
     });
 
     if (!cart) {
@@ -150,6 +210,10 @@ export async function updateCart(
     const updatedCart = await prisma.cartItem.update({
       where: { id: cartId },
       data: { quantity },
+      select: {
+        id: true,
+        quantity: true,
+      },
     });
 
     return res

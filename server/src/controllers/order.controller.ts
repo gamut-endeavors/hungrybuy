@@ -10,11 +10,19 @@ import { Prisma } from "@prisma/client";
 export async function getAllOrders(_: TypedRequest, res: Response) {
   try {
     const orders = await prisma.order.findMany({
-      include: {
+      select: {
+        id: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        tableId: true,
         items: {
-          include: {
-            menuItem: true,
-            variant: true,
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            menuItem: { select: { name: true } },
+            variant: { select: { label: true } },
           },
         },
       },
@@ -39,11 +47,18 @@ export async function getActiveOrders(req: TypedRequest, res: Response) {
         tableId,
         isActive: true,
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
         items: {
-          include: {
-            menuItem: true,
-            variant: true,
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            menuItem: { select: { name: true } },
+            variant: { select: { label: true } },
           },
         },
       },
@@ -75,11 +90,19 @@ export async function updateOrderStatus(
         status,
         isActive,
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        tableId: true,
         items: {
-          include: {
-            menuItem: true,
-            variant: true,
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            menuItem: { select: { name: true } },
+            variant: { select: { label: true } },
           },
         },
       },
@@ -106,9 +129,13 @@ export async function createOrder(req: TypedRequest, res: Response) {
     const result = await prisma.$transaction(async (tx) => {
       const cartItems = await tx.cartItem.findMany({
         where: { tableId },
-        include: {
-          menuItem: true,
-          variant: true,
+        select: {
+          id: true,
+          quantity: true,
+          menuItemId: true,
+          variantId: true,
+          menuItem: { select: { price: true, isAvailable: true } },
+          variant: { select: { price: true } },
         },
       });
 
@@ -149,6 +176,19 @@ export async function createOrder(req: TypedRequest, res: Response) {
           isActive: true,
           items: {
             create: orderItems,
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true,
+              quantity: true,
+              price: true,
+            },
           },
         },
       });

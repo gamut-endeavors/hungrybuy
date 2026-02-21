@@ -10,6 +10,10 @@ export async function getAllCategories(_: TypedRequest, res: Response) {
   try {
     const categories = await prisma.category.findMany({
       orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
     return res
@@ -32,6 +36,10 @@ export async function createCategory(
     const newCategory = await prisma.category.create({
       data: {
         name,
+      },
+      select: {
+        id: true,
+        name: true,
       },
     });
 

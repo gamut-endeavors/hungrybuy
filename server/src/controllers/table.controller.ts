@@ -48,7 +48,14 @@ export async function createTable(
 
 export async function getAllTables(_: TypedRequest, res: Response) {
   try {
-    const tables = await prisma.table.findMany({ orderBy: { number: "asc" } });
+    const tables = await prisma.table.findMany({
+      orderBy: { number: "asc" },
+      select: {
+        id: true,
+        number: true,
+        qrToken: true,
+      },
+    });
 
     return res
       .status(200)
