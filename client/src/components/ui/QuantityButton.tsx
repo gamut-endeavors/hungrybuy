@@ -8,28 +8,34 @@ interface Props {
 
 export default function QuantityBtn({ count, onIncrease, onDecrease }: Props) {
   return (
-    <div className="flex items-center gap-2 bg-brand-red text-white px-2 py-1 rounded-full h-8 w-24 justify-between shadow-md">
+    <div className="flex items-center bg-brand-red text-white p-0.5 rounded-full h-8 w-22 justify-between shadow-md overflow-hidden">
       {/* Minus Button */}
-      <button 
-        onClick={onDecrease}
-        className="bg-white rounded-full p-0.5 hover:bg-gray-100 transition-colors active:scale-90"
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDecrease();
+        }}
+        className="bg-white rounded-full p-1.5 hover:bg-gray-50 transition-colors active:scale-95 shrink-0 flex items-center justify-center"
         type="button"
       >
-        <Minus size={12} className="text-brand-red" />
+        <Minus size={14} className="text-brand-red" strokeWidth={4} />
       </button>
 
       {/* Number Display */}
-      <span className="font-bold text-sm text-center w-full select-none">
-        {count.toString().padStart(1, '0')}
+      <span className="font-bold text-[13px] text-center flex-1 select-none">
+        {count}
       </span>
 
       {/* Plus Button */}
-      <button 
-        onClick={onIncrease}
-        className="bg-white rounded-full p-0.5 hover:bg-gray-100 transition-colors active:scale-90"
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onIncrease();
+        }}
+        className="bg-white rounded-full p-1.5 hover:bg-gray-50 transition-colors active:scale-95 shrink-0 flex items-center justify-center"
         type="button"
       >
-        <Plus size={12} className="text-brand-red" />
+        <Plus size={14} className="text-brand-red" strokeWidth={4} />
       </button>
     </div>
   );

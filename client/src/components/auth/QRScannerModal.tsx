@@ -2,7 +2,8 @@
 
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom'; 
 
 interface QRScannerModalProps {
   isOpen: boolean;
@@ -12,11 +13,16 @@ interface QRScannerModalProps {
 
 export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerModalProps) {
   const [error, setError] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
-    <div className="fixed inset-0 z-9999 bg-black/90 flex flex-col items-center justify-center p-4">
+  if (!isOpen || !mounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-9999 w-screen h-dvh bg-black/95 flex flex-col items-center justify-center p-4">
       <button
         onClick={onClose}
         className="absolute top-6 right-6 text-white bg-white/10 p-2 rounded-full backdrop-blur-sm z-10"
@@ -62,4 +68,6 @@ export default function QRScannerModal({ isOpen, onClose, onScan }: QRScannerMod
       )}
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
