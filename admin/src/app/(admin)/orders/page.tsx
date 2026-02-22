@@ -39,7 +39,7 @@ export default function OrdersPage() {
         activeOrders: orders.filter(o => o.status !== 'PAID').length,
         revenue: orders.filter(o => o.status === 'PAID').reduce((totalAcc, order) => {
             return totalAcc + order.items.reduce((itemAcc, item) => itemAcc + (item.price * item.quantity), 0);
-        }, 0) / 100,
+        }, 0) ,
         customers: orders.length
     };
 

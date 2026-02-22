@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
 import Section from "@/components/layout/Section";
 import { Loader2 } from "lucide-react";
+import SortBy from "@/components/ui/SortBy";
 
 export default function Home() {
 
@@ -40,6 +41,8 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  const [sortOrder, setSortOrder] = useState<string>("popular");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -105,6 +108,11 @@ export default function Home() {
         params.append("search", debouncedSearchQuery.trim());
       }
 
+      if (sortOrder !== "popular") {
+        params.append("sortBy", "price");
+        params.append("sortOrder", sortOrder);
+      }
+
       const endpoint = `/menu?${params.toString()}`;
       const res = await api.get(endpoint);
       const data = res.data.data;
@@ -130,7 +138,7 @@ export default function Home() {
       setIsMenuLoading(false);
       setIsFetchingMore(false);
     }
-  }, [handleAuthError, selectedCategory, dietFilter, debouncedSearchQuery]);
+  }, [handleAuthError, selectedCategory, dietFilter, debouncedSearchQuery, sortOrder]);
 
   useEffect(() => {
     if (!user) return;
@@ -251,90 +259,85 @@ export default function Home() {
     : categories.find(c => c.id === selectedCategory)?.name || "Products";
 
   return (
-    <main className="h-dvh w-full md:max-w-md md:mx-auto bg-brand-bg relative shadow-xl overflow-hidden">
+    <main className="h-dvh w-full bg-brand-bg relative flex flex-col overflow-hidden">
       <Suspense fallback={null}>
         <QRHandler />
       </Suspense>
 
-      <div
-        className={`flex-1 overflow-y-auto scrollbar-hide pb-24 h-full flex flex-col`}
-      >
-        <div className="px-4 shrink-0 sticky top-0 z-20 bg-brand-bg">
-          <Header
-            cartCount={getTotalCartCount()}
-            onCartClick={() => router.push("/cart")}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+      <div className="w-full px-4 md:px-6 shrink-0 z-20 bg-white/70 backdrop-blur-sm pt-4 border-b border-gray-100">
+        <Header
+          cartCount={getTotalCartCount()}
+          onCartClick={() => router.push("/cart")}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      </div>
+
+      <div className="flex-1 flex flex-row w-full overflow-hidden">
+
+        {/* Left Sidebar */}
+        <aside className="w-20 sm:w-24 md:w-28 border-r border-gray-100 bg-white/70 shrink-0 h-full z-10 overflow-y-auto scrollbar-hide pt-2 pb-10">
+          <Categories
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
           />
+        </aside>
 
-        </div>
-        <div className="px-4 shrink-0">
+        <div className="flex-1 overflow-y-auto scrollbar-hide h-full flex flex-col relative bg-transparent">
 
-          <div>
+          <div className="px-4 md:px-6 mt-6 flex w-full justify-start">
             <DietFilter activeFilter={dietFilter} onFilterChange={setDietFilter} />
+          </div>
+
+          <div className="px-4 md:px-6 flex flex-col pb-24">
+            <Section>
+
+              <div className="flex items-center justify-between mb-6">
+                <SectionTitle
+                  categoryName={currentCategoryName}
+                  categorydescription={selectedCategory === "all" ? "Explore our delicious menu" : "Freshly made with premium ingredients"}
+                />
+
+                <SortBy sortOrder={sortOrder} setSortOrder={setSortOrder} />
+
+              </div>
+
+              {/* Products List */}
+              <div className="pb-safe min-h-screen">
+                <FeaturedProducts
+                  products={products}
+                  isLoading={isMenuLoading}
+                  getProductTotalQty={getProductTotalQty}
+                  onAddClick={handleCardAddClick}
+                  onIncrease={increaseSingleItem}
+                  onDecrease={decreaseSingleItem}
+                  onClearFilters={() => {
+                    setDietFilter("all");
+                    setSelectedCategory("all");
+                    setSearchQuery("");
+                  }}
+                />
+
+                <div ref={observerTarget} className="w-full h-10 mt-4 flex justify-center items-center">
+                  {isFetchingMore && <Loader2 className="animate-spin text-brand-red" size={24} />}
+                </div>
+              </div>
+            </Section>
           </div>
 
         </div>
 
-        <div className="px-4 flex flex-col">
-          <Section className="mb-2">
-            <SectionTitle title="Categories" />
-            <Categories
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
-          </Section>
-
-
-          <Section>
-            <SectionTitle
-              title={currentCategoryName}
-            />
-            <div className={"pb-safe min-h-screen"}>
-              <FeaturedProducts
-                products={products}
-                isLoading={isMenuLoading}
-                getProductTotalQty={getProductTotalQty}
-                onAddClick={handleCardAddClick}
-                onIncrease={increaseSingleItem}
-                onDecrease={decreaseSingleItem}
-                onClearFilters={() => {
-                  setDietFilter("all");
-                  setSelectedCategory("all");
-                  setSearchQuery("");
-                }}
-              />
-
-              <div ref={observerTarget} className="w-full h-10 mt-4 flex justify-center items-center">
-                {isFetchingMore && (
-                  <Loader2 className="animate-spin text-brand-red" size={24} />
-                )}
-              </div>
-
-            </div>
-          </Section>
-        </div>
       </div>
 
       <ProductDialog
         key={selectedProduct?.id ? `${selectedProduct.id}-${isDialogOpen}` : 'dialog-reset'}
         isOpen={isDialogOpen}
         product={selectedProduct}
-        initialData={
-          selectedProduct
-            ? cart
-              .filter((i) => i.menuItem.id === selectedProduct.id)
-              .reduce(
-                (acc, item) => {
-                  if (item.variant)
-                    acc[item.variant.label] = item.quantity;
-                  return acc;
-                },
-                {} as Record<string, number>,
-              )
-            : {}
-        }
+        initialData={selectedProduct ? cart.filter((i) => i.menuItem.id === selectedProduct.id).reduce((acc, item) => {
+          if (item.variant) acc[item.variant.label] = item.quantity;
+          return acc;
+        }, {} as Record<string, number>) : {}}
         onClose={() => setIsDialogOpen(false)}
         onSave={handleDialogSave}
       />

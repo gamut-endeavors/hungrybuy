@@ -21,7 +21,7 @@ export default function Featured({
   onClearFilters,
 }: FeaturedProductsProps) {
   return (
-    <div className="flex flex-col gap-3 pb-safe">
+    <div className="flex flex-col gap-4 pb-safe">
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-10 gap-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>

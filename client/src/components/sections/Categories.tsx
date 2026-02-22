@@ -13,7 +13,7 @@ export default function Categories({
   onSelectCategory 
 }: CategoriesProps) {
   return (
-    <div className="flex justify-start overflow-x-auto pb-4 scrollbar-hide gap-4">
+    <div className="flex flex-col gap-y-6 items-center w-full px-2 py-6">
       <CategoryItem
         id="all"
         name="All"

@@ -49,7 +49,7 @@ export default function OrderRow({ order, tableNumber, onStatusClick }: OrderRow
             <span>•</span>
             <span>{order.items.length} Items</span>
             <span>•</span>
-            <span className="text-brand-red font-bold">${(totalAmount / 100).toFixed(2)}</span>
+            <span className="text-brand-red font-bold">${(totalAmount).toFixed(2)}</span>
           </div>
         </div>
       </div>

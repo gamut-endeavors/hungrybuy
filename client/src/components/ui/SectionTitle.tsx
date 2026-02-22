@@ -1,25 +1,20 @@
 interface Props {
-  title: string;
-  actionText?: string;
-  onActionClick?: () => void;
+  categoryName: string;
+  categorydescription?: string;
 }
 
-export default function SectionTitle({ 
-  title, 
-  actionText = "See all", 
-  onActionClick 
+export default function SectionTitle({
+  categoryName,
+  categorydescription,
 }: Props) {
   return (
-    <div className="flex justify-between items-center mb-4 px-1">
-      <h2 className="text-2xl font-bold text-brand-dark">{title}</h2>
-      {onActionClick && ( 
-        <button 
-          onClick={onActionClick}
-          className="text-brand-dark text-sm hover:text-brand-red transition-colors"
-        >
-          {actionText}
-        </button>
-      )}
+    <div>
+      <h2 className="text-xl md:text-2xl font-bold text-brand-dark">
+        {categoryName}
+      </h2>
+      <p className="text-[12px] md:text-sm text-gray-500 mt-1">
+        {categorydescription || "Freshly made with premium ingredients"}
+      </p>
     </div>
   );
 }
