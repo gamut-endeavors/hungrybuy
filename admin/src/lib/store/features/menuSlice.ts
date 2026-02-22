@@ -2,9 +2,10 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '@/lib/api';
 import { Product, MenuVariant } from '@/lib/types';
 import { AxiosError } from 'axios';
+import { RootState } from '@/lib/store/store';
 
 interface AddProductThunkPayload {
-    itemData: FormData; 
+    itemData: FormData;
     variants: { label: string; price: number }[];
 }
 
@@ -14,16 +15,28 @@ interface UpdateProductThunkPayload {
     variants: { id?: string; label: string; price: number }[];
 }
 
+interface FetchProductsParams {
+    cursor?: string | null;
+    categoryId?: string;
+    limit?: number;
+}
+
 interface MenuState {
     products: Product[];
     isLoading: boolean;
     error: string | null;
+    nextCursor: string | null;
+    hasNextPage: boolean;
+    activeCategory: string;
 }
 
 const initialState: MenuState = {
     products: [],
     isLoading: false,
     error: null,
+    nextCursor: null,
+    hasNextPage: false,
+    activeCategory: 'all',
 };
 
 
@@ -31,10 +44,20 @@ const initialState: MenuState = {
 
 export const fetchProducts = createAsyncThunk(
     'menu/fetchAll',
-    async (_, { rejectWithValue }) => {
+    async ({ cursor = null, categoryId, limit = 20 }: FetchProductsParams = {}, { rejectWithValue }) => {
         try {
-            const response = await api.get('/menu');
-            return response.data.data.items;
+            const params = new URLSearchParams();
+            if (cursor) params.set('cursor', cursor);
+            if (categoryId && categoryId !== 'all') params.set('categoryId', categoryId);
+            params.set('limit', String(limit));
+
+            const response = await api.get(`/menu?${params.toString()}`);
+            return {
+                items: response.data.data.items,
+                nextCursor: response.data.data.pagination.nextCursor,
+                hasNextPage: response.data.data.pagination.hasNextPage,
+                isFirstPage: !cursor,
+            };
         } catch (error) {
             const err = error as AxiosError<{ message: string }>;
             return rejectWithValue(err.response?.data?.message || 'Failed to fetch menu');
@@ -44,7 +67,7 @@ export const fetchProducts = createAsyncThunk(
 
 export const addProduct = createAsyncThunk(
     'menu/add',
-    async ({ itemData, variants }: AddProductThunkPayload, { rejectWithValue, dispatch }) => {
+    async ({ itemData, variants }: AddProductThunkPayload, { rejectWithValue, dispatch, getState }) => {
         try {
 
             // 1. Create Main Item (Sends Multipart/Form-Data)
@@ -64,7 +87,10 @@ export const addProduct = createAsyncThunk(
                 ));
             }
 
-            dispatch(fetchProducts());
+            const state = getState() as RootState;
+            const activeCategory = state.menu.activeCategory;
+            dispatch(fetchProducts({ categoryId: activeCategory }));
+
             return newItem;
 
         } catch (error) {
@@ -77,7 +103,7 @@ export const addProduct = createAsyncThunk(
 
 export const updateProduct = createAsyncThunk(
     'menu/update',
-    async ({ id, itemData, variants }: UpdateProductThunkPayload, { rejectWithValue, dispatch }) => {
+    async ({ id, itemData, variants }: UpdateProductThunkPayload, { rejectWithValue, dispatch, getState }) => {
         try {
             // 1. Update Main Item (Sends Multipart/Form-Data)
             await api.patch(`/menu/${id}`, itemData, {
@@ -104,7 +130,10 @@ export const updateProduct = createAsyncThunk(
                 ...toUpdate.map(v => api.patch(`/menu/${id}/variants/${v.id}`, { label: v.label, price: Number(v.price) }))
             ]);
 
-            dispatch(fetchProducts());
+            const state = getState() as RootState;
+            const activeCategory = state.menu.activeCategory;
+            dispatch(fetchProducts({ categoryId: activeCategory }));
+
             return id;
         } catch (error) {
             const err = error as AxiosError<{ message: string }>;
@@ -131,15 +160,30 @@ export const deleteProduct = createAsyncThunk(
 const menuSlice = createSlice({
     name: 'menu',
     initialState,
-    reducers: {},
+    reducers: {
+        setActiveCategory(state, action) {
+            state.activeCategory = action.payload;
+            state.products = [];
+            state.nextCursor = null;
+            state.hasNextPage = false;
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchProducts.pending, (state) => { state.isLoading = true; })
             .addCase(fetchProducts.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.products = action.payload.map((p: Product) => ({
-                    ...p,
-                }));
+                if (action.payload.isFirstPage) {
+                    state.products = action.payload.items;
+                } else {
+                    state.products = [...state.products, ...action.payload.items];
+                }
+                state.nextCursor = action.payload.nextCursor;
+                state.hasNextPage = action.payload.hasNextPage;
+            })
+            .addCase(fetchProducts.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload as string;
             })
             .addCase(deleteProduct.fulfilled, (state, action) => {
                 state.products = state.products.filter(p => p.id !== action.payload);
@@ -149,4 +193,5 @@ const menuSlice = createSlice({
     },
 });
 
+export const { setActiveCategory } = menuSlice.actions;
 export default menuSlice.reducer;

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Plus } from 'lucide-react';
 import { RootState, AppDispatch } from '@/lib/store/store';
 import { addCategory, deleteCategory } from '@/lib/store/features/categorySlice';
-import { addProduct, updateProduct, deleteProduct } from '@/lib/store/features/menuSlice';
+import { addProduct, updateProduct, deleteProduct, fetchProducts, setActiveCategory } from '@/lib/store/features/menuSlice';
 import { Product } from '@/lib/types';
 
 import MenuRow from '@/components/menu/MenuRow';
@@ -16,12 +16,33 @@ import ManageCategoriesModal from '@/components/modals/ManageCategoriesModal';
 export default function MenuPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { categories } = useSelector((state: RootState) => state.categories);
-  const { products } = useSelector((state: RootState) => state.menu);
+  const { products, isLoading, hasNextPage, nextCursor, activeCategory } = useSelector((state: RootState) => state.menu);
 
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    dispatch(fetchProducts({ categoryId: activeCategory }));
+  }, [activeCategory, dispatch]);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isLoading) {
+          dispatch(fetchProducts({ cursor: nextCursor, categoryId: activeCategory }));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isLoading, nextCursor, activeCategory, dispatch]);
 
   const handleSaveProduct = async (itemData: FormData, variants: { id?: string; label: string; price: number }[]) => {
     let result;
@@ -39,7 +60,10 @@ export default function MenuPage() {
     }
   };
 
-  const filteredProducts = activeCategory === 'all' ? products : products.filter(p => p.categoryId === activeCategory);
+  const handleCategoryClick = (categoryId: string) => {
+    if (categoryId === activeCategory) return;
+    dispatch(setActiveCategory(categoryId));
+  };
 
   return (
     <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -47,13 +71,24 @@ export default function MenuPage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900">Menu Management</h2>
         </div>
-        <CategoryPills categories={categories} activeCategory={activeCategory} onCategoryClick={setActiveCategory} onAddCategory={() => setIsCategoryModalOpen(true)} />
+        <CategoryPills categories={categories} activeCategory={activeCategory} onCategoryClick={handleCategoryClick} onAddCategory={() => setIsCategoryModalOpen(true)} />
         <div className="flex flex-col gap-3 mt-4">
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map(product => (
+          {products.length > 0 ? (
+            products.map(product => (
               <MenuRow key={product.id} product={product} onEdit={() => { setEditingProduct(product); setIsProductModalOpen(true); }} onDelete={() => { if (confirm("Delete product?")) dispatch(deleteProduct(product.id)); }} />
             ))
           ) : <div className="py-20 text-center text-gray-400 bg-white rounded-3xl border border-dashed">No items in this category yet.</div>}
+
+          <div ref={sentinelRef} className="py-4 text-center text-sm text-gray-400">
+            {isLoading && <span>Loading more...</span>}
+            {!isLoading && !hasNextPage && products.length > 0 && <span>You&apos;ve reached the end</span>}
+            {!isLoading && products.length === 0 && (
+              <div className="py-20 text-center text-gray-400 bg-white rounded-3xl border border-dashed">
+                No items in this category yet.
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
