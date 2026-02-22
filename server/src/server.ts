@@ -18,6 +18,8 @@ dotenv.config();
 export function startServer() {
   const app = express();
 
+  app.disable("x-powered-by");
+
   app.use(express.json({ limit: "10kb" }));
   app.use(
     cors({

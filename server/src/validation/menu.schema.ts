@@ -20,6 +20,16 @@ export const GetMenuQuery = z.object({
     .min(2, "Search must be atleast two charecters")
     .max(50)
     .optional(),
+
+  cursor: z.uuidv4().optional(),
+  limit: z.coerce.number().min(10).max(40).default(20),
+
+  sortBy: z.enum(["price", "rating", "name"]).default("name"),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
+
+  minRating: z.coerce.number().min(0).max(5).optional(),
+
+  includeUnavailable: z.coerce.boolean().default(false),
 });
 
 export type GetMenuQuery = z.infer<typeof GetMenuQuery>;

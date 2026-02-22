@@ -22,23 +22,45 @@ export async function getMenu(
   res: Response,
 ) {
   try {
-    const { categoryId, foodType, search } = req.query;
+    const {
+      categoryId,
+      foodType,
+      search,
+      cursor,
+      limit,
+      sortBy,
+      sortOrder,
+      minRating,
+      includeUnavailable,
+    } = req.query;
+
+    const isAdminOrShop: boolean =
+      req.user?.role === "ADMIN" || req.user?.role === "SHOP";
 
     const searchText =
       typeof search === "string" && search.trim().length >= 2
         ? search.trim()
         : undefined;
 
+    const whereClause = {
+      ...(includeUnavailable && isAdminOrShop ? {} : { isAvailable: true }),
+      ...(categoryId && { categoryId }),
+      ...(foodType && { foodType }),
+      ...(minRating !== undefined && { rating: { gte: minRating } }),
+      ...(searchText && {
+        name: { contains: searchText, mode: "insensitive" as const },
+      }),
+    };
+
+    const orderBy: any = {
+      [sortBy]: sortOrder,
+    };
+
     const items = await prisma.menuItem.findMany({
-      where: {
-        isAvailable: true,
-        ...(categoryId && { categoryId: String(categoryId) }),
-        ...(foodType && { foodType: foodType }),
-        ...(searchText && {
-          name: { contains: searchText, mode: "insensitive" },
-        }),
-      },
-      orderBy: { name: "asc" },
+      where: whereClause,
+      take: limit + 1,
+      ...(cursor && { skip: 1, cursor: { id: cursor } }),
+      orderBy: [orderBy, { id: "asc" }],
       select: {
         id: true,
         name: true,
@@ -61,9 +83,21 @@ export async function getMenu(
       },
     });
 
+    let nextCursor: string | null = null;
+    if (items.length > limit) {
+      const nextItem = items.pop();
+      nextCursor = nextItem!.id;
+    }
+
     return res.status(200).json({
       message: "Fetched all menu items",
-      data: { items },
+      data: {
+        items,
+        pagination: {
+          nextCursor,
+          hasNextPage: !!nextCursor,
+        },
+      },
     });
   } catch (error) {
     console.log("MENU_GET_ERROR", error);
