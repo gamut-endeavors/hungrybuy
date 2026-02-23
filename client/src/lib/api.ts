@@ -1,4 +1,8 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,8 +23,8 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<any>) => {
-    const originalRequest = error.config as any;
+  async (error: AxiosError<unknown>) => {
+    const originalRequest = error.config as CustomAxiosRequestConfig;
 
     if (
       error.response?.status === 401 &&
@@ -41,7 +45,7 @@ api.interceptors.response.use(
           refreshToken,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = res.data;
+        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
 
         localStorage.setItem("accessToken", accessToken);
         if (newRefreshToken) {

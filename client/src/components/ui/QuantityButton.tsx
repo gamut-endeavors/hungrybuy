@@ -8,29 +8,36 @@ interface Props {
 
 export default function QuantityBtn({ count, onIncrease, onDecrease }: Props) {
   return (
-    <div className="flex items-center gap-2 bg-brand-red text-white px-2 py-1 rounded-full h-8 w-24 justify-between shadow-md">
-      {/* Minus Button */}
-      <button 
-        onClick={onDecrease}
-        className="bg-white rounded-full p-0.5 hover:bg-gray-100 transition-colors active:scale-90"
+    <div className="flex flex-col items-center gap-2 bg-gray-50 rounded-xl p-1 h-22 shadow-inner border border-gray-100">
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDecrease();
+        }}
+        className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-brand-dark active:scale-90 transition-transform border border-gray-100"
         type="button"
       >
-        <Minus size={12} className="text-brand-red" />
+        <Minus size={14} />
       </button>
 
-      {/* Number Display */}
-      <span className="font-bold text-sm text-center w-full select-none">
-        {count.toString().padStart(1, '0')}
+      <span className="text-xs font-bold h-2 flex items-center justify-center text-brand-dark select-none">
+        {count}
       </span>
 
-      {/* Plus Button */}
-      <button 
-        onClick={onIncrease}
-        className="bg-white rounded-full p-0.5 hover:bg-gray-100 transition-colors active:scale-90"
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onIncrease();
+        }}
+        className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center shadow-sm text-white active:scale-90 transition-transform"
         type="button"
       >
-        <Plus size={12} className="text-brand-red" />
+        <Plus size={14} />
       </button>
+
+
+
     </div>
   );
 }

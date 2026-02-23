@@ -117,7 +117,7 @@ export default function AddProductModal({ isOpen, onClose, onSave, categories, i
       .map(v => ({
         id: v.id,
         label: v.label,
-        price: Math.round(parseFloat(v.price) * 100)
+        price: Math.round(parseFloat(v.price))
       }));
 
     const data = new FormData();

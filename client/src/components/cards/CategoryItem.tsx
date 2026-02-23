@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 interface Props {
-  id: string;
+  id?: string;
   name: string;
   image: string;
   isActive: boolean;
@@ -12,19 +12,19 @@ export default function CategoryItem({ name, image, isActive, onClick }: Props) 
   return (
     <div 
       onClick={onClick}
-      className="flex flex-col p-1 items-center gap-2 group cursor-pointer shrink-0"
+      className="flex flex-col items-center gap-2 group cursor-pointer w-full shrink-0"
     >
       <div 
         style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
         className={`
-          relative w-20 h-20 rounded-full overflow-hidden flex items-center justify-center transition-all border-2
+          relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center transition-all border-2
           ${isActive 
-            ? 'bg-brand-red border-brand-red text-white shadow-lg shadow-red-200 scale-105' 
-            : 'bg-white border-transparent hover:border-red-200' 
+            ? 'bg-brand-red/10 border-brand-red/20 shadow-sm scale-105' 
+            : 'bg-brand-bg border-transparent hover:border-brand-red/10' 
           }
       `}>
          {(!image || image === "") && (
-           <div className={`relative z-10 text-xs font-bold ${isActive ? 'text-white' : 'text-brand-red'}`}>
+           <div className={`relative z-10 text-[9px] leading-tight font-bold text-center px-1 line-clamp-2 wrap-break-word ${isActive ? 'text-brand-red' : 'text-brand-dark/40'}`}>
              {name}
            </div>
          )}
@@ -34,14 +34,14 @@ export default function CategoryItem({ name, image, isActive, onClick }: Props) 
             src={image} 
             alt={name} 
             fill 
-            className="object-cover" 
+            className={`object-contain p-2.5 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`} 
           />
          )}
       </div>
       
-      <span className={`text-sm font-medium transition-colors ${isActive ? 'text-brand-red font-bold' : 'text-brand-dark'}`}>
+      {/* <span className={`text-[11px] font-medium transition-colors text-center ${isActive ? 'text-brand-red font-bold' : 'text-brand-dark/60 group-hover:text-brand-dark'}`}>
         {name}
-      </span>
+      </span> */}
     </div>
   );
 }

@@ -29,60 +29,62 @@ export default function ProductCard({ product, cartQty, onAddClick, onIncrease, 
     : null;
 
   return (
-    <div className="group bg-white rounded-3xl p-3 flex gap-3 sm:gap-4 shadow-sm hover:shadow-lg transition-all duration-300 w-full min-h-35">
+    <div className="group bg-white rounded-3xl p-2 flex flex-col shadow-sm hover:shadow-md transition-all duration-300 w-full h-full">
 
-      <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 self-center">
-        <div className="w-full h-full rounded-2xl overflow-hidden relative bg-gray-100">
-          <RatingBadge rating={product.rating!} />
-          <Image
-            src={imageUrl || '/placeholder.png'}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            sizes="(max-width: 640px) 112px, 128px"
-            unoptimized={true}
-          />
+      <div className="relative w-full aspect-4/3 shrink-0 rounded-[20px] overflow-hidden bg-gray-50">
+        <Image
+          src={imageUrl || '/images/burgers.jpeg'}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 150px, 200px"
+          unoptimized={true}
+        />
+
+        <div className="absolute top-2 right-2 z-10">
+          <RatingBadge rating={product.rating ?? 4.8} />
         </div>
       </div>
 
-      <div className="flex flex-col flex-1 justify-between min-h-28">
-        <div>
-          <h3 className="font-bold text-base sm:text-lg text-brand-dark leading-tight line-clamp-2 sm:line-clamp-1">
+      <div className="flex flex-row flex-1 px-1 pb-1 pt-2 gap-2 h-full">
+        {/* Left Side: Name and Price */}
+        <div className="flex flex-col flex-1 justify-between min-w-0">
+          <h3 className="font-bold text-[12px] text-brand-dark leading-snug">
             {product.name}
           </h3>
-          <p className="text-[10px] text-gray-500 line-clamp-2 mt-1 leading-relaxed">
-            {product.description}
-          </p>
+          <div className="mt-auto">
+            <span className="text-brand-red font-bold text-[15px]">${displayPrice}</span>
+          </div>
         </div>
 
-        <div className="flex items-end justify-between mt-2">
-          <div>
-            <span className="text-[10px] text-gray-400 font-medium block mb-0.5">
-              {hasSizes ? 'Starts from' : 'Price'}
-            </span>
-            <span className="text-brand-red font-bold text-lg">
-              $ {displayPrice}
-            </span>
+        {/* Right Side: The New Vertical Button */}
+        <div className="shrink-0 flex flex-col justify-end relative w-8">
+          <div className={`transition-all duration-100 ease-out ${cartQty > 0 ? 'h-22' : 'h-7'}`} />
+          <div
+            className={`absolute bottom-0 left-0 w-full transition-all duration-100 ease-out origin-bottom
+              ${cartQty > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'}
+            `}
+          >
+            <QuantityBtn
+              count={cartQty > 0 ? cartQty : 1}
+              onIncrease={handleCounterClick}
+              onDecrease={handleCounterDecrease}
+            />
           </div>
 
-          <div className="shrink-0 mb-0.5">
-            {cartQty > 0 ? (
-              <div className="scale-90 origin-right sm:scale-100">
-                <QuantityBtn
-                  count={cartQty}
-                  onIncrease={handleCounterClick}
-                  onDecrease={handleCounterDecrease}
-                />
-              </div>
-            ) : (
-              <button
-                onClick={onAddClick}
-                className="w-9 h-9 sm:w-8 sm:h-8 rounded-full text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform bg-brand-red"
-              >
-                <Plus size={18} />
-              </button>
-            )}
+          <div
+            className={`absolute bottom-0 left-0 w-full transition-all duration-100 ease-out origin-bottom
+              ${cartQty > 0 ? 'opacity-0 scale-75 pointer-events-none' : 'opacity-100 scale-100'}
+            `}
+          >
+            <button
+              onClick={onAddClick}
+              className="w-8 h-7 bg-brand-red rounded-lg flex items-center justify-center shadow-md text-white active:scale-90 transition-transform"
+            >
+              <Plus size={16} />
+            </button>
           </div>
+
         </div>
       </div>
     </div>

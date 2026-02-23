@@ -24,7 +24,7 @@ export default function OrderDetailsView({ order, tableNumber, onBack, onComplet
   }, []);
 
   // --- Helpers ---
-  const formatPrice = (cents: number) => (cents / 100).toFixed(2);
+  const formatPrice = (cents: number) => (cents).toFixed(2);
 
   const calculateTotal = () => {
     return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
