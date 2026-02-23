@@ -104,20 +104,25 @@ export async function refreshToken(
       data: { revoked: true },
     });
 
+    await deleteSession(session.id);
+
+    const newSessionId = uuid();
+
     const newAccessToken = signAccessToken({
       id: session.user.id,
       role: session.user.role,
-      sessionId: session.id,
+      sessionId: newSessionId,
     });
 
     const newRefreshToken = signRefreshToken({
       id: session.user.id,
       role: session.user.role,
-      sessionId: session.id,
+      sessionId: newSessionId,
     });
 
     await prisma.authSession.create({
       data: {
+        id: newSessionId,
         userId: session.user.id,
         accessTokenHash: hashToken(newAccessToken),
         refreshTokenHash: hashToken(newRefreshToken),
@@ -127,6 +132,8 @@ export async function refreshToken(
         ipAddress: req.ip,
       },
     });
+
+    await storeSession(newSessionId, session.user.id, session.user.role);
 
     return res.status(200).json({
       message: "Token refreshed successfully",
