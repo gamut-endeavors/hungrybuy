@@ -1,17 +1,20 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '@/lib/api'; // <--- Import your new helper
-import { AuthState } from '../../types';
-import { AxiosError } from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/lib/api"; // <--- Import your new helper
+import { AuthState } from "../../types";
+import { AxiosError } from "axios";
 
 // --- ASYNC THUNK (LOGIN ACTION) ---
 export const loginAdmin = createAsyncThunk(
-  'auth/loginAdmin',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  "auth/loginAdmin",
+  async (
+    credentials: { email: string; password: string },
+    { rejectWithValue },
+  ) => {
     try {
       // 👇 USE THE HELPER INSTANCE
       // Since baseURL is '.../api', this becomes '.../api/admin/login'
       // Adjust the path string based on your exact route structure
-      const response = await api.post('/admin/login', credentials);
+      const response = await api.post("/admin/login", credentials);
 
       return response.data; // Expected: { token, data: { user: {...} }, message }
     } catch (err) {
@@ -20,24 +23,25 @@ export const loginAdmin = createAsyncThunk(
       if (!error.response) {
         throw err;
       }
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      return rejectWithValue(error.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 // --- INITIAL STATE ---
 const getUserFromStorage = () => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('adminToken');
-    const userStr = localStorage.getItem('adminUser');
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken");
+    const userStr = localStorage.getItem("adminUser");
 
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
         return { token, user, isAuthenticated: true };
       } catch {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("adminUser");
       }
     }
   }
@@ -52,7 +56,7 @@ const initialState: AuthState = {
 
 // --- SLICE ---
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     logout: (state) => {
@@ -60,9 +64,10 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("adminUser");
       }
     },
   },
@@ -78,9 +83,13 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.user = action.payload.data.user;
 
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('adminToken', action.payload.token);
-          localStorage.setItem('adminUser', JSON.stringify(action.payload.data.user));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("accessToken", action.payload.accessToken);
+          localStorage.setItem("refreshToken", action.payload.refreshToken);
+          localStorage.setItem(
+            "adminUser",
+            JSON.stringify(action.payload.data.user),
+          );
         }
       })
       .addCase(loginAdmin.rejected, (state, action) => {
