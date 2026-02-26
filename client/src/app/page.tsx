@@ -296,8 +296,6 @@ export default function Home() {
         <Header
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
         />
       </div>
 

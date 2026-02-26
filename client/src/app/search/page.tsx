@@ -13,6 +13,13 @@ export default function SearchPage() {
     const [results, setResults] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    const [pageLoaded, setPageLoaded] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setPageLoaded(true), 150);
+        return () => clearTimeout(timer);
+    }, []);
+
     useEffect(() => {
         const fetchResults = async () => {
             if (query.trim().length < 2) {
@@ -50,7 +57,9 @@ export default function SearchPage() {
         <div className="min-h-dvh bg-gray-50 flex flex-col">
             <SearchHeader query={query} setQuery={setQuery} />
 
-            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
+            <div className={`flex-1 overflow-y-auto px-4 pt-4 pb-20 transition-opacity duration-500 ease-in-out
+          ${pageLoaded ? 'opacity-100' : 'opacity-0'}
+        `}>
                 {query.trim().length >= 2 && (
                     <p className="text-sm text-gray-500 mb-4 font-medium px-1">
                         {isLoading ? 'Searching...' : `Found ${results.length} results`}

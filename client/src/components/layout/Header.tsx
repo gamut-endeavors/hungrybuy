@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRScannerModal from '@/components/auth/QRScannerModal';
 import { Search, QrCode, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -9,9 +9,6 @@ import { useRouter } from 'next/navigation';
 interface HeaderProps {
   cartCount?: number;
   onCartClick?: () => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onSearchFocus?: () => void;
 }
 
 export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
@@ -20,6 +17,19 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
   const { tableToken, tableNo, resolveTableFromToken } = useCart();
 
   const router = useRouter();
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    setIsTransitioning(false);
+  }, []);
+
+  const handleSearchClick = () => {
+    setIsTransitioning(true);
+
+    setTimeout(() => {
+      router.push('/search');
+    }, 150);
+  };
 
   const handleScan = async (scannedUrl: string) => {
     try {
@@ -50,12 +60,12 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
 
   return (
     <>
-      <div className="py-2 flex flex-col gap-5">
-
-        {/* TOP ROW: Logo and Actions */}
-        <div className="flex justify-between items-center">
-
-          {/* Brand Logo & Subtitle */}
+      <div className="py-2 flex flex-col gap-5 relative">
+        <div
+          className={`flex justify-between items-center transition-all duration-200 ease-in-out origin-top
+            ${isTransitioning ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}
+          `}
+        >
           <div className="flex flex-col">
             <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1">
               HungryBuy<span className="text-brand-orange">.</span>
@@ -63,10 +73,7 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
             <p className="text-xs text-gray-500 font-medium">Delicious food at your table</p>
           </div>
 
-          {/* Right Actions: Table Info & Cart */}
           <div className="flex items-center gap-4">
-
-            {/* Table Indicator / QR Scanner */}
             <button
               onClick={() => setIsScannerOpen(true)}
               className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${tableToken
@@ -81,7 +88,6 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
               )}
             </button>
 
-            {/* Cart Button */}
             <button
               onClick={onCartClick}
               className="relative p-1 shrink-0 active:scale-95 transition-transform"
@@ -96,13 +102,17 @@ export default function Header({ cartCount = 0, onCartClick }: HeaderProps) {
           </div>
         </div>
 
-        {/* BOTTOM ROW: Search Bar */}
         <div
-          onClick={() => router.push('/search')}
-          className="relative w-full cursor-pointer group"
+          onClick={handleSearchClick}
+          className={`relative cursor-pointer group transition-all duration-200 ease-out z-50
+            ${isTransitioning
+              ? '-translate-y-16 translate-x-11 w-[calc(100%-2.75rem)]'
+              : 'translate-y-0 translate-x-0 w-full'
+            }
+          `}
         >
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-brand-orange transition-colors" size={18} />
-          <div className="w-full h-10 bg-[#F6F6F6] rounded-xl flex items-center pl-11 pr-4 text-base text-gray-400 border border-transparent group-hover:border-brand-orange transition-all font-medium">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-brand-orange transition-colors" size={18} />
+          <div className="w-full h-10 bg-[#F6F6F6] rounded-xl flex items-center pl-10 pr-4 text-base text-gray-400 border border-transparent group-hover:border-brand-orange transition-all font-medium">
             Search for dishes, drinks...
           </div>
         </div>
