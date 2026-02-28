@@ -63,12 +63,18 @@ export async function adminLogin(
       },
     });
 
-    return res.status(200).json({
-      message: "User logged in successfully",
-      data: { user: { name: user.name, email: user.email } },
-      accessToken,
-      refreshToken,
-    });
+    return res
+      .status(200)
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      })
+      .json({
+        message: "User logged in successfully",
+        data: { user: { name: user.name, email: user.email } },
+        accessToken,
+      });
   } catch (error) {
     console.log("ADMIN_LOGIN_ERROR:", error);
     return res.status(500).json({ message: "Internal Server Error" });
