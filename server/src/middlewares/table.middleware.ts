@@ -19,7 +19,6 @@ export function verifyTable(
       number: payload.number,
       restaurantId: payload.restaurantId,
     };
-    
 
     next();
   } catch (error) {

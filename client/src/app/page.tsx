@@ -8,20 +8,25 @@ import ProductDialog from "@/components/ui/ProductDialog";
 import Loading from "@/components/other/Loading";
 import { MenuItem, Category } from "@/lib/types";
 import { useState, useEffect, Suspense, useCallback, useRef } from "react";
-import { useCart } from "@/hooks/useCart"
+import { useCart } from "@/hooks/useCart";
 import { api } from "@/lib/api";
 import QRHandler from "@/components/auth/QRHandler";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
 import { Loader2 } from "lucide-react";
 import SortBy from "@/components/ui/SortBy";
+import HomeSearchHandler from "@/components/search/HomeSearchHandler";
 import SearchOverlay from "@/components/search/SearchOverlay";
 
 export default function Home() {
-
-  const searchParams = useSearchParams();
-  const tableParam = searchParams.get("table");
+  const [tableParam, setTableParam] = useState<string | null>(null);
+  const [categoryIdFromUrl, setCategoryIdFromUrl] = useState<string | null>(
+    null,
+  );
+  const [highlightIdFromUrl, setHighlightIdFromUrl] = useState<string | null>(
+    null,
+  );
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
@@ -42,9 +47,6 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-
-  const categoryIdFromUrl = searchParams.get('categoryId');
-  const highlightIdFromUrl = searchParams.get('highlight');
 
   const [sortOrder, setSortOrder] = useState<string>("popular");
 
@@ -86,63 +88,71 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const fetchMenu = useCallback(async (isLoadMore: boolean = false, cursorToUse: string | null = null) => {
-    try {
-      if (isLoadMore) {
-        setIsFetchingMore(true);
-      } else {
-        setIsMenuLoading(true);
-      }
+  const fetchMenu = useCallback(
+    async (isLoadMore: boolean = false, cursorToUse: string | null = null) => {
+      try {
+        if (isLoadMore) {
+          setIsFetchingMore(true);
+        } else {
+          setIsMenuLoading(true);
+        }
 
-      const params = new URLSearchParams({ limit: "20" });
+        const params = new URLSearchParams({ limit: "20" });
 
-      if (isLoadMore && cursorToUse) {
-        params.append("cursor", cursorToUse);
-      }
+        if (isLoadMore && cursorToUse) {
+          params.append("cursor", cursorToUse);
+        }
 
-      if (selectedCategory !== "all") {
-        params.append("categoryId", selectedCategory);
-      }
+        if (selectedCategory !== "all") {
+          params.append("categoryId", selectedCategory);
+        }
 
-      if (dietFilter !== "all") {
-        params.append("foodType", dietFilter === "veg" ? "VEG" : "NON_VEG");
-      }
+        if (dietFilter !== "all") {
+          params.append("foodType", dietFilter === "veg" ? "VEG" : "NON_VEG");
+        }
 
-      if (debouncedSearchQuery.trim().length >= 2) {
-        params.append("search", debouncedSearchQuery.trim());
-      }
+        if (debouncedSearchQuery.trim().length >= 2) {
+          params.append("search", debouncedSearchQuery.trim());
+        }
 
-      if (sortOrder !== "popular") {
-        params.append("sortBy", "price");
-        params.append("sortOrder", sortOrder);
-      }
+        if (sortOrder !== "popular") {
+          params.append("sortBy", "price");
+          params.append("sortOrder", sortOrder);
+        }
 
-      const endpoint = `/menu?${params.toString()}`;
-      const res = await api.get(endpoint);
-      const data = res.data.data;
-      const dbProducts = data.items;
+        const endpoint = `/menu?${params.toString()}`;
+        const res = await api.get(endpoint);
+        const data = res.data.data;
+        const dbProducts = data.items;
 
       const readyProducts = dbProducts.map((p: MenuItem) => ({
         ...p,
         qty: 42,
       }));
 
-      if (isLoadMore) {
-        setProducts((prev) => [...prev, ...readyProducts]);
-      } else {
-        setProducts(readyProducts);
+        if (isLoadMore) {
+          setProducts((prev) => [...prev, ...readyProducts]);
+        } else {
+          setProducts(readyProducts);
+        }
+
+        setNextCursor(data.pagination.nextCursor);
+        setHasNextPage(data.pagination.hasNextPage);
+      } catch (error) {
+        handleAuthError(error, "Failed to load menu");
+      } finally {
+        setIsMenuLoading(false);
+        setIsFetchingMore(false);
       }
-
-      setNextCursor(data.pagination.nextCursor);
-      setHasNextPage(data.pagination.hasNextPage);
-
-    } catch (error) {
-      handleAuthError(error, "Failed to load menu");
-    } finally {
-      setIsMenuLoading(false);
-      setIsFetchingMore(false);
-    }
-  }, [handleAuthError, selectedCategory, dietFilter, debouncedSearchQuery, sortOrder]);
+    },
+    [
+      handleAuthError,
+      selectedCategory,
+      dietFilter,
+      debouncedSearchQuery,
+      sortOrder,
+    ],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -151,18 +161,16 @@ export default function Home() {
     setHasNextPage(false);
 
     fetchMenu(false, null);
-
   }, [fetchMenu, user]);
 
   useEffect(() => {
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingMore) {
           fetchMenu(true, nextCursor);
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
 
     if (observerTarget.current) {
@@ -173,7 +181,6 @@ export default function Home() {
   }, [hasNextPage, isFetchingMore, fetchMenu, nextCursor]);
 
   useEffect(() => {
-
     if (!user) return;
 
     const fetchCategoreies = async () => {
@@ -181,14 +188,12 @@ export default function Home() {
         const res = await api.get("/categories");
         const dbCategories: Category[] = res.data.data.categories;
         setCategories(dbCategories);
-
       } catch (error) {
         handleAuthError(error, "Failed to load categories");
       }
-    }
+    };
 
     fetchCategoreies();
-
   }, [user, handleAuthError]);
 
   useEffect(() => {
@@ -198,10 +203,12 @@ export default function Home() {
 
     if (highlightIdFromUrl) {
       const checkExist = setInterval(() => {
-        const element = document.getElementById(`product-${highlightIdFromUrl}`);
+        const element = document.getElementById(
+          `product-${highlightIdFromUrl}`,
+        );
 
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
 
           clearInterval(checkExist);
           const url = new URL(window.location.href);
@@ -215,8 +222,6 @@ export default function Home() {
       return () => clearInterval(checkExist);
     }
   }, [categoryIdFromUrl, highlightIdFromUrl]);
-
-
 
   if (isLoading) {
     return <Loading />;
@@ -299,14 +304,23 @@ export default function Home() {
     }
   };
 
-  const currentCategoryName = selectedCategory === "all"
-    ? "All Products"
-    : categories.find(c => c.id === selectedCategory)?.name || "Products";
+  const currentCategoryName =
+    selectedCategory === "all"
+      ? "All Products"
+      : categories.find((c) => c.id === selectedCategory)?.name || "Products";
 
   return (
     <main className="h-dvh w-full bg-white relative flex flex-col overflow-hidden">
       <Suspense fallback={null}>
         <QRHandler />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <HomeSearchHandler
+          onTableParam={setTableParam}
+          onCategoryParam={setCategoryIdFromUrl}
+          onHighlightParam={setHighlightIdFromUrl}
+        />
       </Suspense>
 
       {/* 1. Header Section (Sticky at the top) */}
@@ -320,7 +334,6 @@ export default function Home() {
 
       {/* Main Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto scrollbar-hide w-full flex flex-col relative">
-
         {/* 2. Categories (Now Horizontal) */}
         <div className="px-4 sm:px-6">
           <Categories
@@ -336,7 +349,11 @@ export default function Home() {
         <div className="px-4 sm:px-6 mt-4 flex items-start justify-between">
           <SectionTitle
             categoryName={currentCategoryName}
-            categorydescription={selectedCategory === "all" ? "Explore our delicious menu" : "Freshly made with premium ingredients"}
+            categorydescription={
+              selectedCategory === "all"
+                ? "Explore our delicious menu"
+                : "Freshly made with premium ingredients"
+            }
           />
           {/* Pushed slightly down to align with the title text nicely */}
           <div className="mt-1">
@@ -361,22 +378,39 @@ export default function Home() {
           />
 
           {/* Infinite Scroll Loader */}
-          <div ref={observerTarget} className="w-full h-10 mt-6 flex justify-center items-center">
-            {isFetchingMore && <Loader2 className="animate-spin text-brand-orange" size={24} />}
+          <div
+            ref={observerTarget}
+            className="w-full h-10 mt-6 flex justify-center items-center"
+          >
+            {isFetchingMore && (
+              <Loader2 className="animate-spin text-brand-orange" size={24} />
+            )}
           </div>
         </div>
-
       </div>
 
       {/* Product Details Modal */}
       <ProductDialog
-        key={selectedProduct?.id ? `${selectedProduct.id}-${isDialogOpen}` : 'dialog-reset'}
+        key={
+          selectedProduct?.id
+            ? `${selectedProduct.id}-${isDialogOpen}`
+            : "dialog-reset"
+        }
         isOpen={isDialogOpen}
         product={selectedProduct}
-        initialData={selectedProduct ? cart.filter((i) => i.menuItem.id === selectedProduct.id).reduce((acc, item) => {
-          if (item.variant) acc[item.variant.label] = item.quantity;
-          return acc;
-        }, {} as Record<string, number>) : {}}
+        initialData={
+          selectedProduct
+            ? cart
+                .filter((i) => i.menuItem.id === selectedProduct.id)
+                .reduce(
+                  (acc, item) => {
+                    if (item.variant) acc[item.variant.label] = item.quantity;
+                    return acc;
+                  },
+                  {} as Record<string, number>,
+                )
+            : {}
+        }
         onClose={() => setIsDialogOpen(false)}
         onSave={handleDialogSave}
       />
