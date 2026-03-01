@@ -6,7 +6,7 @@ import Categories from "@/components/sections/Categories";
 import FeaturedProducts from "@/components/sections/FeaturedProducts";
 import ProductDialog from "@/components/ui/ProductDialog";
 import Loading from "@/components/other/Loading";
-import { Product, Category } from "@/lib/types";
+import { MenuItem, Category } from "@/lib/types";
 import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useCart } from "@/hooks/useCart"
 import { api } from "@/lib/api";
@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
 import { Loader2 } from "lucide-react";
 import SortBy from "@/components/ui/SortBy";
+import SearchOverlay from "@/components/search/SearchOverlay";
 
 export default function Home() {
 
@@ -27,6 +28,8 @@ export default function Home() {
   const { handleAuthError } = useApiAuthError();
 
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState<boolean>(false);
@@ -45,14 +48,14 @@ export default function Home() {
 
   const [sortOrder, setSortOrder] = useState<string>("popular");
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
 
   const { cart, addToCart, updateQuantity, resolveTableFromToken } = useCart();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -119,7 +122,7 @@ export default function Home() {
       const data = res.data.data;
       const dbProducts = data.items;
 
-      const readyProducts = dbProducts.map((p: Product) => ({
+      const readyProducts = dbProducts.map((p: MenuItem) => ({
         ...p,
         qty: 42,
       }));
@@ -203,6 +206,7 @@ export default function Home() {
           clearInterval(checkExist);
           const url = new URL(window.location.href);
           url.searchParams.delete('highlight');
+          url.searchParams.delete('categoryId');
           window.history.replaceState({}, '', url.toString());
         }
       }, 500);
@@ -240,8 +244,14 @@ export default function Home() {
   };
 
   // --- Event Handlers ---
-  const increaseSingleItem = async (product: Product) => {
-    await addToCart(product.id, 1);
+  const increaseSingleItem = async (product: MenuItem) => {
+    const existingItem = findCartItem(product.id);
+
+    if (existingItem) {
+      await updateQuantity(existingItem.id, existingItem.quantity + 1);
+    } else {
+      await addToCart(product, 1);
+    }
   };
 
   const decreaseSingleItem = async (productId: string) => {
@@ -267,17 +277,25 @@ export default function Home() {
       if (existingItem) {
         await updateQuantity(existingItem.id, newQty);
       } else if (newQty > 0) {
-        await addToCart(selectedProduct.id, newQty, variantId);
+        await addToCart(selectedProduct, newQty, variantObj);
       }
     }
   };
 
-  const handleCardAddClick = (product: Product) => {
+  const handleCardAddClick = async (product: MenuItem) => {
     if (product.variants && product.variants.length > 0) {
       setSelectedProduct(product);
       setIsDialogOpen(true);
     } else {
-      increaseSingleItem(product);
+      await addToCart(product, 1);
+    }
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (categoryId === selectedCategory) {
+      setSelectedCategory("all");
+    } else {
+      setSelectedCategory(categoryId);
     }
   };
 
@@ -296,6 +314,7 @@ export default function Home() {
         <Header
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
+          onSearchOpen={() => setIsSearchOpen(true)}
         />
       </div>
 
@@ -307,7 +326,7 @@ export default function Home() {
           <Categories
             categories={categories}
             selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
+            onClickCategory={handleCategoryClick}
             activeDietFilter={dietFilter}
             onFilterChange={setDietFilter}
           />
@@ -361,6 +380,10 @@ export default function Home() {
         onClose={() => setIsDialogOpen(false)}
         onSave={handleDialogSave}
       />
+
+      {isSearchOpen && (
+        <SearchOverlay onClose={() => setIsSearchOpen(false)} />
+      )}
     </main>
   );
 }
