@@ -72,7 +72,7 @@ export async function loginUser(
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/auth/refresh",
-      maxAge: 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
@@ -171,6 +171,13 @@ export async function logout(req: TypedRequest, res: Response) {
       data: {
         revoked: true,
       },
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/auth/refresh",
     });
 
     return res.status(200).json({ message: "Logged out successfully" });
