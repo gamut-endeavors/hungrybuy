@@ -9,17 +9,25 @@ import {
   CreateVariantParams,
   DeleteMenuItemParams,
   DeleteVariantParams,
-  GetMenuQuery,
   GetVariantParams,
   UpdateMenuItemParams,
   UpdateMenuItemsBody,
   UpdateVariantBody,
   UpdateVariantParams,
 } from "../validation/menu.schema";
+import { buildMenuCacheKey, getCache, setCache } from "../utils/cache";
 
 export async function getMenu(req: TypedRequest<{}, {}, {}>, res: Response) {
   try {
     const { id: restaurantId } = req.restaurant!;
+
+    const cacheKey = buildMenuCacheKey(restaurantId);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const isRestaurantOwner = req.user?.role === "RESTAURANT_OWNER";
 
     const items = await prisma.menuItem.findMany({
       where: { restaurantId },
@@ -49,6 +57,10 @@ export async function getMenu(req: TypedRequest<{}, {}, {}>, res: Response) {
       message: "Fetched all menu items",
       data: { items },
     };
+
+    if (!isRestaurantOwner) {
+      await setCache(cacheKey, responsePayload, 300);
+    }
 
     return res.status(200).json(responsePayload);
   } catch (error) {
