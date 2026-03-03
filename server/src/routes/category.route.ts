@@ -34,7 +34,7 @@ router.post(
   createCategory,
 );
 
-router.put(
+router.patch(
   "/:id",
   requireRole(["RESTAURANT_OWNER"]),
   upload.single("image"),

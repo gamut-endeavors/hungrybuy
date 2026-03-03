@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '@/lib/api';
-import { Category } from '@/lib/types';
-import { AxiosError } from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { api } from "@/lib/api";
+import { Category } from "@/lib/types";
+import { AxiosError } from "axios";
 
 interface CategoryState {
   categories: Category[];
@@ -18,73 +18,82 @@ const initialState: CategoryState = {
 // --- ASYNC THUNKS ---
 
 export const fetchCategories = createAsyncThunk(
-  'categories/fetchAll',
+  "categories/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/categories');
+      const response = await api.get("/categories");
       return response.data.data.categories; // { data: { categories: [] } }
     } catch (error) {
-
       const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(err.response?.data?.message || 'Failed to fetch categories');
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch categories",
+      );
     }
-  }
+  },
 );
 
 export const addCategory = createAsyncThunk(
-  'categories/add',
+  "categories/add",
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/categories/create', formData, {
+      const response = await api.post("/categories/create", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data.data.category; // { data: { category: {...} } }
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(err.response?.data?.message || 'Failed to add category');
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to add category",
+      );
     }
-  }
+  },
 );
 
 export const updateCategory = createAsyncThunk(
-  'categories/update',
-  async ({ id, formData }: { id: string; formData: FormData }, { rejectWithValue }) => {
+  "categories/update",
+  async (
+    { id, formData }: { id: string; formData: FormData },
+    { rejectWithValue },
+  ) => {
     try {
-      console.log("heyy")
-      const response = await api.put(`/categories/${id}`, formData, {
+      console.log("heyy");
+      const response = await api.patch(`/categories/${id}`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
-      console.log(response)
+      console.log(response);
       return response.data.data.category;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(err.response?.data?.message || 'Failed to update category');
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update category",
+      );
     }
-  }
+  },
 );
 
-
 export const deleteCategory = createAsyncThunk(
-  'categories/delete',
+  "categories/delete",
   async (id: string, { rejectWithValue }) => {
     try {
       await api.delete(`/categories/${id}`);
       return id;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(err.response?.data?.message || 'Failed to delete category');
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete category",
+      );
     }
-  }
+  },
 );
 
 // --- SLICE ---
 
 const categorySlice = createSlice({
-  name: 'categories',
+  name: "categories",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -100,7 +109,9 @@ const categorySlice = createSlice({
       })
       // Update
       .addCase(updateCategory.fulfilled, (state, action) => {
-        const index = state.categories.findIndex((c) => c.id === action.payload.id);
+        const index = state.categories.findIndex(
+          (c) => c.id === action.payload.id,
+        );
         if (index !== -1) {
           state.categories[index] = action.payload;
           state.categories.sort((a, b) => a.name.localeCompare(b.name));
@@ -108,7 +119,9 @@ const categorySlice = createSlice({
       })
       // Delete
       .addCase(deleteCategory.fulfilled, (state, action) => {
-        state.categories = state.categories.filter((c) => c.id !== action.payload);
+        state.categories = state.categories.filter(
+          (c) => c.id !== action.payload,
+        );
       });
   },
 });

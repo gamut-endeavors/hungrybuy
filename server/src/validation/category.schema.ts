@@ -12,9 +12,8 @@ export const DeleteCategoryParams = z.object({
 
 export type DeleteCategoryParams = z.infer<typeof DeleteCategoryParams>;
 
-
 export const UpdateCategoryParams = z.object({
-  id: z.uuidv4(), 
+  id: z.uuidv4(),
 });
 
 export type UpdateCategoryParams = z.infer<typeof UpdateCategoryParams>;
