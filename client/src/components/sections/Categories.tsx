@@ -6,7 +6,7 @@ type FilterType = 'all' | 'veg' | 'non-veg';
 
 interface CategoriesProps {
   categories: Category[];
-  selectedCategory: string;
+  selectedCategory: string | null;
   onClickCategory: (id: string) => void;
   activeDietFilter: FilterType
   onFilterChange: (filter: FilterType) => void;

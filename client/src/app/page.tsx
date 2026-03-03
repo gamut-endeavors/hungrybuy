@@ -13,13 +13,12 @@ import QRHandler from "@/components/auth/QRHandler";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
-import { Loader2 } from "lucide-react";
 import SortBy from "@/components/ui/SortBy";
 import HomeSearchHandler from "@/components/search/HomeSearchHandler";
 import SearchOverlay from "@/components/search/SearchOverlay";
-import { api } from "@/lib/api";
 
-import { useCategories } from "@/hooks/useMenuCache";
+import { useCategories } from "@/hooks/useCategory";
+import { useFullMenu } from "@/hooks/useMenu";
 
 export default function Home() {
   const [tableParam, setTableParam] = useState<string | null>(null);
@@ -42,35 +41,12 @@ export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const [allProducts, setAllProducts] = useState<MenuItem[]>([]);
-  const [isMenuLoading, setIsMenuLoading] = useState(true);
-
-
   const categories = useCategories(user, handleAuthError);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchFullMenu = async () => {
-      try {
-        setIsMenuLoading(true);
-        const res = await api.get("/menu");
-
-        const dbProducts = res.data.data.items.map((p: MenuItem) => ({
-          ...p,
-          qty: 42,
-        }));
-
-        setAllProducts(dbProducts);
-      } catch (error) {
-        handleAuthError(error, "Failed to load full menu");
-      } finally {
-        setIsMenuLoading(false);
-      }
-    };
-
-    fetchFullMenu();
-  }, [user, handleAuthError]);
+  const { allProducts, isMenuLoading } = useFullMenu({
+    user,
+    handleAuthError,
+  });
 
   const displayedProducts = useMemo(() => {
     let filtered = [...allProducts];
@@ -131,7 +107,7 @@ export default function Home() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (categoryIdFromUrl) {
+    if (categoryIdFromUrl && categoryIdFromUrl !== selectedCategory) {
       setSelectedCategory(categoryIdFromUrl);
     }
 
@@ -153,7 +129,7 @@ export default function Home() {
       setTimeout(() => clearInterval(checkExist), 2000);
       return () => clearInterval(checkExist);
     }
-  }, [categoryIdFromUrl, highlightIdFromUrl]);
+  }, [categoryIdFromUrl, highlightIdFromUrl, selectedCategory]);
 
   if (isLoading) return <Loading />;
   if (!user) return null;
@@ -321,7 +297,7 @@ export default function Home() {
         onSave={handleDialogSave}
       />
 
-      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} />}
+      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} displayedProducts={displayedProducts} />}
     </main>
   );
 }
