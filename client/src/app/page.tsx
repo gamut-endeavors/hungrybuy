@@ -18,7 +18,7 @@ import HomeSearchHandler from "@/components/search/HomeSearchHandler";
 import SearchOverlay from "@/components/search/SearchOverlay";
 
 import { useCategories } from "@/hooks/useCategory";
-import { useFullMenu } from "@/hooks/useMenu";
+import { useMenu } from "@/hooks/useMenu";
 
 export default function Home() {
   const [tableParam, setTableParam] = useState<string | null>(null);
@@ -42,10 +42,13 @@ export default function Home() {
 
   const { categories, isCategoriesLoading } = useCategories(user, handleAuthError);
 
-  const { allProducts, isMenuLoading } = useFullMenu({
-    user,
-    handleAuthError,
-  });
+  const { products: allProducts, isLoading: isMenuLoading, fetchMenu } = useMenu();
+
+  useEffect(() => {
+    if (user) {
+      fetchMenu();
+    }
+  }, [user, fetchMenu]);
 
   const displayedProducts = useMemo(() => {
     let filtered = [...allProducts];
