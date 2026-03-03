@@ -29,8 +29,6 @@ export async function resolveTenant(
         where: { id: restaurantId },
       });
 
-      console.log(restaurant);
-
       if (restaurant) {
         req.restaurant = {
           id: restaurant.id,

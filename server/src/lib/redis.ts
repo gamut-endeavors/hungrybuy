@@ -4,7 +4,10 @@ import { logger } from "./logger";
 export const redis = new Redis({
   host: process.env.REDIS_HOST,
   port: Number(process.env.REDIS_PORT),
-  username: process.env.REDIS_USERNAME,
+  username:
+    process.env.NODE_ENV === "prduction"
+      ? process.env.REDIS_USERNAME
+      : undefined,
   password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
@@ -16,5 +19,5 @@ redis.on("connect", () => {
 });
 
 redis.on("error", (error: any) => {
-  logger.error("redis error", error);
+  logger.error("redis error", error.message);
 });

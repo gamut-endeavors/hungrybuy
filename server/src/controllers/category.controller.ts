@@ -81,6 +81,7 @@ export async function updateCategory(
   try {
     const { id } = req.params;
     const { id: restaurantId } = req.restaurant!;
+    const { name } = req.body;
 
     const existingCategory = await prisma.category.findFirst({
       where: {
@@ -95,8 +96,8 @@ export async function updateCategory(
 
     const updateData: any = {};
 
-    if (req.body.name) {
-      updateData.name = req.body.name.trim()
+    if (name) {
+      updateData.name = name.trim();
     }
 
     if (req.file) {
