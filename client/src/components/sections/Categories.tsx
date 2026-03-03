@@ -1,12 +1,14 @@
 import CategoryItem from "@/components/cards/CategoryItem";
 import { Category } from "@/lib/types";
 import DietFilter from "../ui/DietFilter";
+import { SkeletonCategoryItem } from "../cards/SkeletonCategoryItem";
 
 type FilterType = 'all' | 'veg' | 'non-veg';
 
 interface CategoriesProps {
   categories: Category[];
   selectedCategory: string | null;
+  isLoading: boolean;
   onClickCategory: (id: string) => void;
   activeDietFilter: FilterType
   onFilterChange: (filter: FilterType) => void;
@@ -15,6 +17,7 @@ interface CategoriesProps {
 export default function Categories({
   categories,
   selectedCategory,
+  isLoading,
   onClickCategory,
   activeDietFilter,
   onFilterChange
@@ -30,8 +33,19 @@ export default function Categories({
 
       {/* Horizontal Scrollable Categories List */}
       <div className="flex overflow-x-auto gap-5 pb-2 px-1 mx-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {categories.map((cat) => (
-          <div key={cat.id} className="shrink-0">
+
+        {isLoading && (
+          <>
+            {[...Array(6)].map((_, index) => (
+              <div key={`cat-skeleton-${index}`} className="shrink-0">
+                <SkeletonCategoryItem />
+              </div>
+            ))}
+          </>
+        )}
+
+        {!isLoading && categories.map((cat) => (
+          <div key={cat.id} id={`category-${cat.id}`} className="shrink-0">
             <CategoryItem
               id={cat.id}
               name={cat.name}

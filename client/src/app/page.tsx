@@ -22,8 +22,9 @@ import { useFullMenu } from "@/hooks/useMenu";
 
 export default function Home() {
   const [tableParam, setTableParam] = useState<string | null>(null);
-  const [categoryIdFromUrl, setCategoryIdFromUrl] = useState<string | null>(null);
   const [highlightIdFromUrl, setHighlightIdFromUrl] = useState<string | null>(null);
+
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
@@ -41,7 +42,7 @@ export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const categories = useCategories(user, handleAuthError);
+  const {categories, isCategoriesLoading} = useCategories(user, handleAuthError);
 
   const { allProducts, isMenuLoading } = useFullMenu({
     user,
@@ -107,9 +108,6 @@ export default function Home() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (categoryIdFromUrl && categoryIdFromUrl !== selectedCategory) {
-      setSelectedCategory(categoryIdFromUrl);
-    }
 
     if (highlightIdFromUrl) {
       const checkExist = setInterval(() => {
@@ -129,7 +127,18 @@ export default function Home() {
       setTimeout(() => clearInterval(checkExist), 2000);
       return () => clearInterval(checkExist);
     }
-  }, [categoryIdFromUrl, highlightIdFromUrl, selectedCategory]);
+  }, [highlightIdFromUrl, selectedCategory]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setTimeout(() => {
+        const categoryElement = document.getElementById(`category-${selectedCategory}`);
+        if (categoryElement) {
+          categoryElement.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+      }, 100);
+    }
+  }, [selectedCategory]);
 
   if (isLoading) return <Loading />;
   if (!user) return null;
@@ -204,6 +213,16 @@ export default function Home() {
     }
   };
 
+  const handleCategoryFromUrl = (catId: string | null) => {
+    if (catId) {
+      setSelectedCategory(catId);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 30);
+  };
+
   const currentCategoryName =
     selectedCategory === "all"
       ? "All Products"
@@ -218,7 +237,7 @@ export default function Home() {
       <Suspense fallback={null}>
         <HomeSearchHandler
           onTableParam={setTableParam}
-          onCategoryParam={setCategoryIdFromUrl}
+          onCategoryParam={handleCategoryFromUrl}
           onHighlightParam={setHighlightIdFromUrl}
         />
       </Suspense>
@@ -229,15 +248,17 @@ export default function Home() {
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
           onSearchOpen={() => setIsSearchOpen(true)}
+          isScrolled={isScrolled}
         />
       </div>
 
       {/* Main Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide w-full flex flex-col relative">
+      <div className="flex-1 overflow-y-auto scrollbar-hide w-full flex flex-col relative" onScroll={handleScroll}>
         {/* 2. Categories */}
         <div className="px-4 sm:px-6">
           <Categories
             categories={categories}
+            isLoading = {isCategoriesLoading}
             selectedCategory={selectedCategory}
             onClickCategory={handleCategoryClick}
             activeDietFilter={dietFilter}
@@ -297,7 +318,7 @@ export default function Home() {
         onSave={handleDialogSave}
       />
 
-      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} displayedProducts={displayedProducts} />}
+      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} products={allProducts} isScrolled={isScrolled} />}
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import ProductCard from "@/components/cards/ProductCard";
 import { MenuItem } from "@/lib/types";
+import SkeletonProductCard from "../cards/SkeletonProductCard";
 
 interface FeaturedProductsProps {
   products: MenuItem[];
@@ -25,10 +26,11 @@ export default function Featured({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-safe px-1">
 
         {isLoading && (
-          <div className="col-span-full flex flex-col items-center justify-center py-12 gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange"></div>
-            <p className="text-sm font-medium text-gray-500">Loading menu...</p>
-          </div>
+          <>
+            {[...Array(6)].map((_, index) => (
+              <SkeletonProductCard key={`skeleton-${index}`} />
+            ))}
+          </>
         )}
 
         {!isLoading && products.length > 0 && products.map((product) => (

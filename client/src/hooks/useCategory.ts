@@ -12,12 +12,16 @@ const globalCache = {
 // --- HOOK 1: CATEGORIES ---
 export const useCategories = (user: { phone: string, name: string } | null, handleAuthError: (error: AxiosError, message?: string) => void) => {
     const [categories, setCategories] = useState<Category[]>(globalCache.categories || []);
+    const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
+
 
     useEffect(() => {
         if (!user) return;
 
         const fetchCategories = async () => {
             try {
+                setIsCategoriesLoading(true);
+
                 const res = await api.get("/categories");
                 const dbCategories: Category[] = res.data.data.categories;
 
@@ -27,6 +31,9 @@ export const useCategories = (user: { phone: string, name: string } | null, hand
                 const err = error as AxiosError;
                 handleAuthError(err, "Failed to load categories");
             }
+            finally {
+                setIsCategoriesLoading(false);
+            }
         };
 
         if (!globalCache.categories) {
@@ -34,7 +41,7 @@ export const useCategories = (user: { phone: string, name: string } | null, hand
         }
     }, [user, handleAuthError]);
 
-    return categories;
+    return {categories, isCategoriesLoading};
 };
 
 // --- HOOK 2: MENU PRODUCTS ---

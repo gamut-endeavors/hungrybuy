@@ -8,10 +8,11 @@ import { MenuItem } from '@/lib/types';
 
 interface SearchOverlayProps {
     onClose: () => void;
-    displayedProducts: MenuItem[];
+    products: MenuItem[];
+    isScrolled?: boolean;
 }
 
-export default function SearchOverlay({ onClose, displayedProducts }: SearchOverlayProps) {
+export default function SearchOverlay({ onClose, products, isScrolled }: SearchOverlayProps) {
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [pageLoaded, setPageLoaded] = useState(false);
@@ -37,16 +38,17 @@ export default function SearchOverlay({ onClose, displayedProducts }: SearchOver
     let results: MenuItem[] = [];
 
     if (query.trim().length >= 1) {
-        results = displayedProducts.filter((p) =>
+        results = products.filter((p) =>
             p.name.toLowerCase().includes(q) ||
             (p.description && p.description.toLowerCase().includes(q))
         );
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col animate-in fade-in duration-100 slide-in-from-bottom-2">
-
-            <SearchHeader query={query} setQuery={setQuery} onBack={onClose} />
+        <div className={`fixed inset-0 z-50 bg-gray-50 flex flex-col animate-in fade-in duration-200
+            ${isScrolled ? 'slide-in-from-left-8 origin-top-left' : 'slide-in-from-bottom-2'} 
+        `}>
+            <SearchHeader query={query} setQuery={setQuery} onBack={onClose} isScrolled={isScrolled} />
 
             <div className={`flex-1 overflow-y-auto px-4 pt-4 pb-20 transition-opacity duration-300 ease-in-out
                ${pageLoaded ? 'opacity-100' : 'opacity-0'}

@@ -7,9 +7,10 @@ interface Props {
     query: string;
     setQuery: (val: string) => void;
     onBack?: () => void;
+    isScrolled?: boolean;
 }
 
-export default function SearchHeader({ query, setQuery, onBack }: Props) {
+export default function SearchHeader({ query, setQuery, onBack, isScrolled }: Props) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [isAnimating, setIsAnimating] = useState(true);
@@ -32,8 +33,11 @@ export default function SearchHeader({ query, setQuery, onBack }: Props) {
     return (
         <div className="bg-white sticky top-0 z-20 border-b border-gray-50">
             <div
-                className={`flex items-center gap-3 py-4 px-4 transition-all duration-100 ease-out transform
-                    ${isAnimating ? ' opacity-0' : 'opacity-100'}
+                className={`flex items-center gap-3 py-4 px-4 transition-all duration-200 ease-out transform origin-left
+                    ${isAnimating
+                        ? (isScrolled ? 'opacity-0 scale-x-75' : 'opacity-0') 
+                        : 'opacity-100 scale-x-100'
+                    }
                 `}
             >
                 <button
