@@ -13,18 +13,18 @@ import QRHandler from "@/components/auth/QRHandler";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useApiAuthError } from "@/hooks/useApiAuthError";
-import { Loader2 } from "lucide-react";
 import SortBy from "@/components/ui/SortBy";
 import HomeSearchHandler from "@/components/search/HomeSearchHandler";
 import SearchOverlay from "@/components/search/SearchOverlay";
-import { api } from "@/lib/api";
 
-import { useCategories } from "@/hooks/useMenuCache";
+import { useCategories } from "@/hooks/useCategory";
+import { useFullMenu } from "@/hooks/useMenu";
 
 export default function Home() {
   const [tableParam, setTableParam] = useState<string | null>(null);
-  const [categoryIdFromUrl, setCategoryIdFromUrl] = useState<string | null>(null);
   const [highlightIdFromUrl, setHighlightIdFromUrl] = useState<string | null>(null);
+
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
@@ -34,43 +34,18 @@ export default function Home() {
 
   const [dietFilter, setDietFilter] = useState<"all" | "veg" | "non-veg">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("popular");
 
   const { cart, addToCart, updateQuantity, resolveTableFromToken } = useCart();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const [allProducts, setAllProducts] = useState<MenuItem[]>([]);
-  const [isMenuLoading, setIsMenuLoading] = useState(true);
+  const { categories, isCategoriesLoading } = useCategories(user, handleAuthError);
 
-
-  const categories = useCategories(user, handleAuthError);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchFullMenu = async () => {
-      try {
-        setIsMenuLoading(true);
-        const res = await api.get("/menu");
-
-        const dbProducts = res.data.data.items.map((p: MenuItem) => ({
-          ...p,
-          qty: 42,
-        }));
-
-        setAllProducts(dbProducts);
-      } catch (error) {
-        handleAuthError(error, "Failed to load full menu");
-      } finally {
-        setIsMenuLoading(false);
-      }
-    };
-
-    fetchFullMenu();
-  }, [user, handleAuthError]);
+  const { allProducts, isMenuLoading } = useFullMenu({
+    user,
+    handleAuthError,
+  });
 
   const displayedProducts = useMemo(() => {
     let filtered = [...allProducts];
@@ -84,14 +59,6 @@ export default function Home() {
       filtered = filtered.filter((p) => p.foodType === dietValue);
     }
 
-    if (debouncedSearchQuery.trim().length >= 2) {
-      const query = debouncedSearchQuery.toLowerCase();
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(query) ||
-        (p.description && p.description.toLowerCase().includes(query))
-      );
-    }
-
     if (sortOrder !== "popular") {
       filtered.sort((a, b) => {
         if (sortOrder === "asc") return a.price! - b.price!;
@@ -101,13 +68,19 @@ export default function Home() {
     }
 
     return filtered;
-  }, [allProducts, selectedCategory, dietFilter, debouncedSearchQuery, sortOrder]);
+  }, [allProducts, selectedCategory, dietFilter, sortOrder]);
 
   useEffect(() => {
     if (!isLoading && !user) {
-      if (tableParam) {
+      const params = new URLSearchParams(window.location.search);
+      const urlTable = params.get('table');
+
+      if (urlTable) {
+        localStorage.setItem("pending_table_scan", urlTable);
+      } else if (tableParam) {
         localStorage.setItem("pending_table_scan", tableParam);
       }
+
       router.push("/login");
     }
   }, [isLoading, user, router, tableParam]);
@@ -124,16 +97,20 @@ export default function Home() {
   }, [user, resolveTableFromToken, router]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    if (user && tableParam) {
+      resolveTableFromToken(tableParam);
+
+      setTimeout(() => {
+        setTableParam(null);
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('table');
+        window.history.replaceState({}, '', url.toString());
+      }, 50);
+    }
+  }, [user, tableParam, resolveTableFromToken]);
 
   useEffect(() => {
-    if (categoryIdFromUrl) {
-      setSelectedCategory(categoryIdFromUrl);
-    }
 
     if (highlightIdFromUrl) {
       const checkExist = setInterval(() => {
@@ -153,7 +130,18 @@ export default function Home() {
       setTimeout(() => clearInterval(checkExist), 2000);
       return () => clearInterval(checkExist);
     }
-  }, [categoryIdFromUrl, highlightIdFromUrl]);
+  }, [highlightIdFromUrl, selectedCategory]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setTimeout(() => {
+        const categoryElement = document.getElementById(`category-${selectedCategory}`);
+        if (categoryElement) {
+          categoryElement.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        }
+      }, 100);
+    }
+  }, [selectedCategory]);
 
   if (isLoading) return <Loading />;
   if (!user) return null;
@@ -228,6 +216,16 @@ export default function Home() {
     }
   };
 
+  const handleCategoryFromUrl = (catId: string | null) => {
+    if (catId) {
+      setSelectedCategory(catId);
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 30);
+  };
+
   const currentCategoryName =
     selectedCategory === "all"
       ? "All Products"
@@ -242,7 +240,7 @@ export default function Home() {
       <Suspense fallback={null}>
         <HomeSearchHandler
           onTableParam={setTableParam}
-          onCategoryParam={setCategoryIdFromUrl}
+          onCategoryParam={handleCategoryFromUrl}
           onHighlightParam={setHighlightIdFromUrl}
         />
       </Suspense>
@@ -253,15 +251,17 @@ export default function Home() {
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
           onSearchOpen={() => setIsSearchOpen(true)}
+          isScrolled={isScrolled}
         />
       </div>
 
       {/* Main Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide w-full flex flex-col relative">
+      <div className="flex-1 overflow-y-auto scrollbar-hide w-full flex flex-col relative" onScroll={handleScroll}>
         {/* 2. Categories */}
         <div className="px-4 sm:px-6">
           <Categories
             categories={categories}
+            isLoading={isCategoriesLoading}
             selectedCategory={selectedCategory}
             onClickCategory={handleCategoryClick}
             activeDietFilter={dietFilter}
@@ -296,7 +296,6 @@ export default function Home() {
             onClearFilters={() => {
               setDietFilter("all");
               setSelectedCategory("all");
-              setSearchQuery("");
             }}
           />
         </div>
@@ -321,7 +320,7 @@ export default function Home() {
         onSave={handleDialogSave}
       />
 
-      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} />}
+      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} products={allProducts} isScrolled={isScrolled} />}
     </main>
   );
 }
