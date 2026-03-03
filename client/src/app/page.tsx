@@ -34,15 +34,13 @@ export default function Home() {
 
   const [dietFilter, setDietFilter] = useState<"all" | "veg" | "non-veg">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<string>("popular");
 
   const { cart, addToCart, updateQuantity, resolveTableFromToken } = useCart();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const {categories, isCategoriesLoading} = useCategories(user, handleAuthError);
+  const { categories, isCategoriesLoading } = useCategories(user, handleAuthError);
 
   const { allProducts, isMenuLoading } = useFullMenu({
     user,
@@ -61,14 +59,6 @@ export default function Home() {
       filtered = filtered.filter((p) => p.foodType === dietValue);
     }
 
-    if (debouncedSearchQuery.trim().length >= 2) {
-      const query = debouncedSearchQuery.toLowerCase();
-      filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(query) ||
-        (p.description && p.description.toLowerCase().includes(query))
-      );
-    }
-
     if (sortOrder !== "popular") {
       filtered.sort((a, b) => {
         if (sortOrder === "asc") return a.price! - b.price!;
@@ -78,13 +68,19 @@ export default function Home() {
     }
 
     return filtered;
-  }, [allProducts, selectedCategory, dietFilter, debouncedSearchQuery, sortOrder]);
+  }, [allProducts, selectedCategory, dietFilter, sortOrder]);
 
   useEffect(() => {
     if (!isLoading && !user) {
-      if (tableParam) {
+      const params = new URLSearchParams(window.location.search);
+      const urlTable = params.get('table');
+
+      if (urlTable) {
+        localStorage.setItem("pending_table_scan", urlTable);
+      } else if (tableParam) {
         localStorage.setItem("pending_table_scan", tableParam);
       }
+
       router.push("/login");
     }
   }, [isLoading, user, router, tableParam]);
@@ -101,11 +97,18 @@ export default function Home() {
   }, [user, resolveTableFromToken, router]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    if (user && tableParam) {
+      resolveTableFromToken(tableParam);
+
+      setTimeout(() => {
+        setTableParam(null);
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('table');
+        window.history.replaceState({}, '', url.toString());
+      }, 50);
+    }
+  }, [user, tableParam, resolveTableFromToken]);
 
   useEffect(() => {
 
@@ -258,7 +261,7 @@ export default function Home() {
         <div className="px-4 sm:px-6">
           <Categories
             categories={categories}
-            isLoading = {isCategoriesLoading}
+            isLoading={isCategoriesLoading}
             selectedCategory={selectedCategory}
             onClickCategory={handleCategoryClick}
             activeDietFilter={dietFilter}
@@ -293,7 +296,6 @@ export default function Home() {
             onClearFilters={() => {
               setDietFilter("all");
               setSelectedCategory("all");
-              setSearchQuery("");
             }}
           />
         </div>
