@@ -1,4 +1,3 @@
-import { getSession } from "../lib/session";
 import { verifyAccessToken } from "../utils/jwt";
 import { AuthenticatedSocket } from "./types";
 
@@ -13,14 +12,10 @@ export async function socketAuthMiddleware(
     }
 
     const payload = verifyAccessToken(token);
-    const session = await getSession(payload.sessionId);
-    if (!session) {
-      return next(new Error("Session expired"));
-    }
 
     socket.user = {
-      id: session.userId,
-      role: session.role,
+      id: payload.id,
+      role: payload.role,
       sessionId: payload.sessionId,
     };
 
