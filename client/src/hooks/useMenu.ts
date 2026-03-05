@@ -1,45 +1,27 @@
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { MenuItem } from "@/lib/types";
+"use client"
+
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchProductsAction } from "@/store/actions/menuAction";
+import { useCallback, useEffect } from "react";
 import { AxiosError } from "axios";
 
-interface UseFullMenuProps {
-    user: { name: string, phone: string } | null;
-    handleAuthError: (error: AxiosError, message?: string) => void;
-}
-
-export function useFullMenu({ user, handleAuthError }: UseFullMenuProps) {
-    const [allProducts, setAllProducts] = useState<MenuItem[]>([]);
-    const [isMenuLoading, setIsMenuLoading] = useState(false);
+export function useMenu() {
+    const dispatch = useAppDispatch();
+    const menuState = useAppSelector((state) => state.menu);
 
     useEffect(() => {
-        if (!user) return;
 
-        const fetchFullMenu = async () => {
+        const fetchMenu = async () => {
             try {
-                setIsMenuLoading(true);
-
-                const res = await api.get("/menu");
-
-                const dbProducts = res.data.data.items.map((p: MenuItem) => ({
-                    ...p,
-                    qty: 42,
-                }));
-
-                setAllProducts(dbProducts);
+                await dispatch(fetchProductsAction())
             } catch (error) {
-                const err = error as AxiosError;
-                handleAuthError(err, "Failed to load full menu");
-            } finally {
-                setIsMenuLoading(false);
+                console.error("Failed to load menu", error as AxiosError);
             }
         };
 
-        fetchFullMenu();
-    }, [user, handleAuthError]);
+        fetchMenu();
+    }, [dispatch]);
 
-    return {
-        allProducts,
-        isMenuLoading,
-    };
+    return menuState;
+
 }

@@ -12,13 +12,12 @@ import { useCart } from "@/hooks/useCart";
 import QRHandler from "@/components/auth/QRHandler";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useApiAuthError } from "@/hooks/useApiAuthError";
 import SortBy from "@/components/ui/SortBy";
 import HomeSearchHandler from "@/components/search/HomeSearchHandler";
 import SearchOverlay from "@/components/search/SearchOverlay";
 
 import { useCategories } from "@/hooks/useCategory";
-import { useFullMenu } from "@/hooks/useMenu";
+import { useMenu } from "@/hooks/useMenu";
 
 export default function Home() {
   const [tableParam, setTableParam] = useState<string | null>(null);
@@ -28,7 +27,6 @@ export default function Home() {
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
-  const { handleAuthError } = useApiAuthError();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -40,12 +38,24 @@ export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const { categories, isCategoriesLoading } = useCategories(user, handleAuthError);
+  useEffect(() => {
+    if (!isLoading && !user) {
+      const params = new URLSearchParams(window.location.search);
+      const urlTable = params.get('table');
 
-  const { allProducts, isMenuLoading } = useFullMenu({
-    user,
-    handleAuthError,
-  });
+      if (urlTable) {
+        localStorage.setItem("pending_table_scan", urlTable);
+      } else if (tableParam) {
+        localStorage.setItem("pending_table_scan", tableParam);
+      }
+
+      router.push("/login");
+    }
+  }, [isLoading, user, router, tableParam]);
+
+  const { categories, isCategoriesLoading } = useCategories();
+
+  const { products: allProducts, isLoading: isMenuLoading } = useMenu();
 
   const displayedProducts = useMemo(() => {
     let filtered = [...allProducts];

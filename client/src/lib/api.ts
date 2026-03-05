@@ -30,6 +30,7 @@ const processQueue = (
 
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -89,7 +90,7 @@ api.interceptors.response.use(
         isRefreshing = false;
 
         localStorage.clear();
-        window.location.href = "/";
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
