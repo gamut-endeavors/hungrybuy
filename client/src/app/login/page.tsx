@@ -26,13 +26,16 @@ export default function LoginPage() {
     try {
       if (phone.length < 10) throw new Error("Invalid phone number");
 
+      setStep("OTP");
+
       await api.post("/auth/send-otp", { phone });
 
       setDirection(1);
       setPhoneNumber(phone);
-      setStep("OTP");
       toast.success("Code sent!");
     } catch (error) {
+      setStep("PHONE");
+      setDirection(0);
       console.error(error);
       const err = error as AxiosError<{ message: string }>;
       toast.error(err.response?.data?.message || "Failed to send code");

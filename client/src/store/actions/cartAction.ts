@@ -67,9 +67,16 @@ export const addToCartAction = (menuItem: MenuItem, quantity: number, variant?: 
     async (dispatch: AppDispatch, getState: () => RootState) => {
 
         const { tableToken, cart } = getState().cart;
+        const { user } = getState().auth;
+
 
         if (!tableToken) {
             toast.error("No table selected!");
+            return;
+        }
+
+        if(!user){
+            toast.error("Please login first!");
             return;
         }
 
