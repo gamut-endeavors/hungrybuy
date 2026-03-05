@@ -235,11 +235,18 @@ export default function Home() {
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
-    const progress = Math.min(Math.max(scrollTop / 60, 0), 1);
+    const startThreshold = 20;
+    const animationDistance = 150;
+
+    const progress = Math.min(
+      Math.max((scrollTop - startThreshold) / animationDistance, 0),
+      1
+    );
 
     setScrollProgress(progress);
     setIsScrolled(progress === 1);
   };
+
   const currentCategoryName =
     selectedCategory === "all"
       ? "All Products"

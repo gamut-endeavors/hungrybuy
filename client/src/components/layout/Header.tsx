@@ -12,18 +12,21 @@ interface HeaderProps {
   scrollProgress?: number;
 }
 
-export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrollProgress = 0 }: HeaderProps) {
+export default function Header({
+  cartCount = 0,
+  onCartClick,
+  onSearchOpen,
+  scrollProgress = 0
+}: HeaderProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { tableToken, tableNo, resolveTableFromToken } = useCart();
-
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleSearchClick = () => {
     setIsTransitioning(true);
     setTimeout(() => {
       if (onSearchOpen) onSearchOpen();
-
       setIsTransitioning(false);
     }, 50);
   };
@@ -31,21 +34,15 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrol
   const handleScan = async (scannedUrl: string) => {
     try {
       let qrToken = '';
-
       if (scannedUrl.startsWith('http')) {
         const urlObj = new URL(scannedUrl);
         qrToken = urlObj.searchParams.get('table') || '';
       } else {
         qrToken = scannedUrl;
       }
-
-      console.log(qrToken);
-
       if (qrToken) {
         setIsScannerOpen(false);
-
         await resolveTableFromToken(qrToken);
-
       } else {
         alert("Invalid QR Code. Please scan a valid table code.");
       }
@@ -56,13 +53,29 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrol
   };
 
   const headerHeight = 116 - (56 * scrollProgress);
-
-  const titleOpacity = 1 - (scrollProgress * 1.5);
-  const titleTranslateY = -16 * scrollProgress;
-  const titleScale = 1 - (0.05 * scrollProgress);
-
   const searchTop = 68 - (60 * scrollProgress);
   const searchShrinkX = 110 * scrollProgress;
+  const isScrolled = scrollProgress > 0.5;
+
+  const titleOpacity = (isTransitioning && !isScrolled) ? 0 : 1 - (scrollProgress * 1.5);
+  const titleTranslateY = (isTransitioning && !isScrolled) ? -16 : -16 * scrollProgress;
+  const titleScale = 1 - (0.05 * scrollProgress);
+
+  let searchTransform = 'translate(0px, 0px) scaleX(1)';
+  let searchWidth = `calc(100% - ${searchShrinkX}px)`;
+  let searchOpacity = 1;
+
+  if (isTransitioning) {
+    if (!isScrolled) {
+      searchTransform = 'translate(44px, -64px) scaleX(1)';
+      searchWidth = 'calc(100% - 2.75rem)';
+    } else {
+      searchTransform = 'translate(0px, 0px) scaleX(1.1)';
+      searchOpacity = 0;
+    }
+  }
+
+  const activeTransition = isTransitioning ? 'all 0.3s ease-out' : 'none';
 
   return (
     <>
@@ -76,7 +89,9 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrol
           style={{
             opacity: Math.max(0, titleOpacity),
             transform: `translateY(${titleTranslateY}px) scale(${titleScale})`,
-            pointerEvents: scrollProgress > 0.5 ? 'none' : 'auto',
+            pointerEvents: isScrolled ? 'none' : 'auto',
+            transition: activeTransition,
+            visibility: titleOpacity <= 0 ? 'hidden' : 'visible'
           }}
           className="absolute top-2 left-0 flex flex-col origin-top"
         >
@@ -91,8 +106,8 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrol
           <button
             onClick={() => setIsScannerOpen(true)}
             className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${tableToken
-              ? 'bg-[#f16716] text-white shadow-md'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer'
+                ? 'bg-[#f16716] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer'
               }`}
           >
             {tableToken ? <span className="text-sm font-bold">{tableNo}</span> : <QrCode size={18} />}
@@ -113,12 +128,11 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrol
           onClick={handleSearchClick}
           style={{
             top: `${searchTop}px`,
-            width: `calc(100% - ${searchShrinkX}px)`,
-            ...(isTransitioning ? {
-              transition: 'all 0.15s ease-out',
-              opacity: 0,
-              transform: 'translateY(-10px)'
-            } : {})
+            width: searchWidth,
+            transform: searchTransform,
+            opacity: searchOpacity,
+            transition: activeTransition,
+            visibility: searchOpacity <= 0 ? 'hidden' : 'visible'
           }}
           className="absolute left-0 z-10 cursor-pointer group origin-left"
         >
