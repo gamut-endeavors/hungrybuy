@@ -9,10 +9,10 @@ interface HeaderProps {
   cartCount?: number;
   onCartClick?: () => void;
   onSearchOpen?: () => void;
-  isScrolled?: boolean;
+  scrollProgress?: number;
 }
 
-export default function Header({ cartCount = 0, onCartClick, onSearchOpen, isScrolled }: HeaderProps) {
+export default function Header({ cartCount = 0, onCartClick, onSearchOpen, scrollProgress = 0 }: HeaderProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { tableToken, tableNo, resolveTableFromToken } = useCart();
@@ -55,21 +55,30 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, isScr
     }
   };
 
+  const headerHeight = 116 - (56 * scrollProgress);
+
+  const titleOpacity = 1 - (scrollProgress * 1.5);
+  const titleTranslateY = -16 * scrollProgress;
+  const titleScale = 1 - (0.05 * scrollProgress);
+
+  const searchTop = 68 - (60 * scrollProgress);
+  const searchShrinkX = 110 * scrollProgress;
+
   return (
     <>
-      <div className={`relative w-full transition-all duration-300 ease-in-out ${isScrolled ? 'h-15' : 'h-29'}`}>
+      <div
+        style={{ height: `${headerHeight}px` }}
+        className="relative w-full overflow-visible"
+      >
 
+        {/* Title Section */}
         <div
-          className={`absolute top-2 left-0 flex flex-col transition-all duration-300 origin-top
-            ${isScrolled
-              ? 'opacity-0 invisible -translate-y-4 pointer-events-none scale-95'
-              : 'opacity-100 visible translate-y-0 scale-100'
-            }
-            ${isTransitioning && !isScrolled
-              ? 'opacity-0 invisible -translate-y-4 pointer-events-none'
-              : ''
-            }
-          `}
+          style={{
+            opacity: Math.max(0, titleOpacity),
+            transform: `translateY(${titleTranslateY}px) scale(${titleScale})`,
+            pointerEvents: scrollProgress > 0.5 ? 'none' : 'auto',
+          }}
+          className="absolute top-2 left-0 flex flex-col origin-top"
         >
           <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1">
             HungryBuy<span className="text-brand-orange">.</span>
@@ -77,10 +86,11 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, isScr
           <p className="text-xs text-gray-500 font-medium">Delicious food at your table</p>
         </div>
 
+        {/* Action Buttons (QR, Cart) */}
         <div className="absolute top-2 right-0 flex items-center gap-4 z-20">
           <button
             onClick={() => setIsScannerOpen(true)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${tableToken
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${tableToken
               ? 'bg-[#f16716] text-white shadow-md'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer'
               }`}
@@ -98,27 +108,25 @@ export default function Header({ cartCount = 0, onCartClick, onSearchOpen, isScr
           </button>
         </div>
 
+        {/* Search Bar */}
         <div
           onClick={handleSearchClick}
-          className={`absolute left-0 transition-all duration-300 ease-out z-10 cursor-pointer group origin-left
-            ${isScrolled
-              ? 'top-2 w-[calc(100%-110px)]'
-              : 'top-17 w-full'
-            }
-            ${isTransitioning && !isScrolled
-              ? '-translate-y-16 translate-x-11 w-[calc(100%-2.75rem)] opacity-100 visible'
-              : isTransitioning && isScrolled
-                ? 'translate-y-0 translate-x-0 opacity-0 invisible scale-x-110'
-                : 'translate-y-0 translate-x-0 opacity-100 visible scale-x-100'
-            }
-          `}
+          style={{
+            top: `${searchTop}px`,
+            width: `calc(100% - ${searchShrinkX}px)`,
+            ...(isTransitioning ? {
+              transition: 'all 0.15s ease-out',
+              opacity: 0,
+              transform: 'translateY(-10px)'
+            } : {})
+          }}
+          className="absolute left-0 z-10 cursor-pointer group origin-left"
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-brand-orange transition-colors" size={18} />
-          <div className="w-full h-10 bg-gray-50 rounded-xl flex truncate items-center pl-10 pr-4 text-base text-gray-400 border border-transparent group-hover:border-brand-orange transition-all font-medium">
-            {isScrolled ?
-              <div className='text-[14px]'>Search for dishes, drinks...</div> :
-              <div>Search for dishes, drinks...</div>
-            }
+          <div className="w-full h-10 bg-gray-50 rounded-xl flex truncate items-center pl-10 pr-4 text-base text-gray-400 border border-transparent group-hover:border-brand-orange transition-colors font-medium">
+            <div style={{ fontSize: `${16 - (2 * scrollProgress)}px` }}>
+              Search for dishes, drinks...
+            </div>
           </div>
         </div>
 

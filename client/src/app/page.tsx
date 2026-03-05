@@ -24,6 +24,7 @@ export default function Home() {
   const [highlightIdFromUrl, setHighlightIdFromUrl] = useState<string | null>(null);
 
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
@@ -233,9 +234,12 @@ export default function Home() {
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setIsScrolled(e.currentTarget.scrollTop > 30);
-  };
+    const scrollTop = e.currentTarget.scrollTop;
+    const progress = Math.min(Math.max(scrollTop / 60, 0), 1);
 
+    setScrollProgress(progress);
+    setIsScrolled(progress === 1);
+  };
   const currentCategoryName =
     selectedCategory === "all"
       ? "All Products"
@@ -261,7 +265,7 @@ export default function Home() {
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
           onSearchOpen={() => setIsSearchOpen(true)}
-          isScrolled={isScrolled}
+          scrollProgress={scrollProgress}
         />
       </div>
 
