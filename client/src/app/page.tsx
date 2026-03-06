@@ -24,6 +24,7 @@ export default function Home() {
   const [highlightIdFromUrl, setHighlightIdFromUrl] = useState<string | null>(null);
 
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const router = useRouter();
   const { isLoading, user } = useAuth();
@@ -73,6 +74,7 @@ export default function Home() {
       filtered.sort((a, b) => {
         if (sortOrder === "asc") return a.price! - b.price!;
         if (sortOrder === "desc") return b.price! - a.price!;
+        if (sortOrder === "alpha") return a.name.localeCompare(b.name);
         return 0;
       });
     }
@@ -193,6 +195,8 @@ export default function Home() {
   const handleDialogSave = async (quantities: Record<string, number>) => {
     if (!selectedProduct) return;
 
+    const operations: Promise<void>[] = [];
+
     for (const [variantLabel, newQty] of Object.entries(quantities)) {
       const variantObj = selectedProduct.variants?.find((v) => v.label === variantLabel);
       const variantId = variantObj?.id;
@@ -202,11 +206,13 @@ export default function Home() {
       const existingItem = findCartItem(selectedProduct.id, variantId);
 
       if (existingItem) {
-        await updateQuantity(existingItem.id, newQty);
+        operations.push(updateQuantity(existingItem.id, newQty));
       } else if (newQty > 0) {
-        await addToCart(selectedProduct, newQty, variantObj);
+        operations.push(addToCart(selectedProduct, newQty, variantObj));
       }
     }
+
+    await Promise.all(operations);
   };
 
   const handleCardAddClick = async (product: MenuItem) => {
@@ -233,7 +239,17 @@ export default function Home() {
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setIsScrolled(e.currentTarget.scrollTop > 30);
+    const scrollTop = e.currentTarget.scrollTop;
+    const startThreshold = 20;
+    const animationDistance = 150;
+
+    const progress = Math.min(
+      Math.max((scrollTop - startThreshold) / animationDistance, 0),
+      1
+    );
+
+    setScrollProgress(progress);
+    setIsScrolled(progress === 1);
   };
 
   const currentCategoryName =
@@ -261,7 +277,7 @@ export default function Home() {
           cartCount={getTotalCartCount()}
           onCartClick={() => router.push("/cart")}
           onSearchOpen={() => setIsSearchOpen(true)}
-          isScrolled={isScrolled}
+          scrollProgress={scrollProgress}
         />
       </div>
 

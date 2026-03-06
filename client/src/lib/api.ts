@@ -45,7 +45,22 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<unknown>) => {
+  async (error: AxiosError<{ message: string }>) => {
+
+
+    const errorMessage = error.response?.data?.message;
+    if (
+      error.response?.status === 401 &&
+      (errorMessage === "Invalid or expired table session token" ||
+        errorMessage === "Table session token invalid")
+    ) {
+
+      localStorage.removeItem("table");
+      window.location.href = "/";
+
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
     if (
