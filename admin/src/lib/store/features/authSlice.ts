@@ -11,10 +11,7 @@ export const loginAdmin = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      // 👇 USE THE HELPER INSTANCE
-      // Since baseURL is '.../api', this becomes '.../api/admin/login'
-      // Adjust the path string based on your exact route structure
-      const response = await api.post("/admin/login", credentials);
+      const response = await api.post("/admin/login", credentials, { withCredentials: true });
 
       return response.data; // Expected: { token, data: { user: {...} }, message }
     } catch (err) {
@@ -40,7 +37,6 @@ const getUserFromStorage = () => {
         return { token, user, isAuthenticated: true };
       } catch {
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
         localStorage.removeItem("adminUser");
       }
     }
@@ -66,7 +62,6 @@ const authSlice = createSlice({
       state.error = null;
       if (typeof window !== "undefined") {
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
         localStorage.removeItem("adminUser");
       }
     },
@@ -80,12 +75,11 @@ const authSlice = createSlice({
       .addCase(loginAdmin.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.token = action.payload.token;
+        state.token = action.payload.accessToken;
         state.user = action.payload.data.user;
 
         if (typeof window !== "undefined") {
           localStorage.setItem("accessToken", action.payload.accessToken);
-          localStorage.setItem("refreshToken", action.payload.refreshToken);
           localStorage.setItem(
             "adminUser",
             JSON.stringify(action.payload.data.user),

@@ -4,7 +4,6 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-// 1. Define Base URL (Change to match your backend)
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 let isRefreshing = false;
@@ -21,7 +20,6 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// 2. Create the Axios Instance
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -29,10 +27,9 @@ export const api = axios.create({
   },
 });
 
-// 3. Request Interceptor: Auto-attach Token
+// Request Interceptor: Auto-attach Access Token
 api.interceptors.request.use(
   (config) => {
-    // Check if we are in the browser
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("accessToken");
       if (token) {
@@ -41,20 +38,10 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// 4. Response Interceptor: Optional global error handling
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
+// Response Interceptor: Handle 401 & Refresh
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<unknown>) => {
@@ -63,7 +50,7 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/login") &&
+      !originalRequest.url?.includes("/admin/login") && // fixed from /auth/login based on your thunk
       !originalRequest.url?.includes("/auth/refresh")
     ) {
       if (isRefreshing) {
@@ -81,20 +68,17 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token");
-
+        // REMOVED: The check for refreshToken in localStorage.
+        // The browser will automatically send the HttpOnly cookie because of `withCredentials: true`
         const res = await axios.post(
           `${BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true },
         );
 
-        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+        const { accessToken } = res.data.data; // Ensure this matches your backend response shape
 
         localStorage.setItem("accessToken", accessToken);
-        if (newRefreshToken)
-          localStorage.setItem("refreshToken", newRefreshToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
@@ -105,7 +89,9 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
-        localStorage.clear();
+        // Clean up and redirect
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("adminUser");
         window.location.href = "/";
         return Promise.reject(refreshError);
       }
