@@ -26,7 +26,9 @@ export default function LoginPage() {
     try {
       if (phone.length < 10) throw new Error("Invalid phone number");
 
-      setStep("OTP");
+      setTimeout(() => {
+        setStep("OTP");
+      }, 100);
 
       await api.post("/auth/send-otp", { phone });
 

@@ -196,6 +196,7 @@ export default function Home() {
     if (!selectedProduct) return;
 
     const operations: Promise<void>[] = [];
+    console.log(quantities)
 
     for (const [variantLabel, newQty] of Object.entries(quantities)) {
       const variantObj = selectedProduct.variants?.find((v) => v.label === variantLabel);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import SearchHeader from '@/components/search/SearchHeader';
 import SearchResultCard from '@/components/search/SearchResultCard';
@@ -16,6 +16,10 @@ export default function SearchOverlay({ onClose, products, isScrolled }: SearchO
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [pageLoaded, setPageLoaded] = useState(false);
+    const closedByBack = useRef(false);
+    const closedForNavigation = useRef(false);
+    const originalHref = useRef<string | null>(null);
+    const originalState = useRef<History['state']>(null);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -35,8 +39,30 @@ export default function SearchOverlay({ onClose, products, isScrolled }: SearchO
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
 
+    useEffect(() => {
+        originalHref.current = window.location.href;
+        originalState.current = window.history.state;
+
+        window.history.pushState({ searchOverlay: true }, '', window.location.href);
+
+        const handlePopState = () => {
+            closedByBack.current = true;
+            onClose();
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            if (!closedByBack.current && !closedForNavigation.current && originalHref.current) {
+                window.history.replaceState(originalState.current, '', originalHref.current);
+            }
+        };
+    }, [onClose]);
+
 
     const handleResultClick = (categoryId: string, productId: string) => {
+        closedForNavigation.current = true;
         onClose();
         router.replace(`/?categoryId=${categoryId}&highlight=${productId}`);
     };
