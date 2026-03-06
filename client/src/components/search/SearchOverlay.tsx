@@ -27,6 +27,13 @@ export default function SearchOverlay({ onClose, products, isScrolled }: SearchO
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
 
 
     const handleResultClick = (categoryId: string, productId: string) => {
@@ -43,6 +50,8 @@ export default function SearchOverlay({ onClose, products, isScrolled }: SearchO
             (p.description && p.description.toLowerCase().includes(q))
         );
     }
+
+
 
     return (
         <div className={`fixed inset-0 z-50 bg-gray-50 flex flex-col animate-in fade-in duration-200

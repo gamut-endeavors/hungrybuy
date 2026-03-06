@@ -9,7 +9,7 @@ import Loading from "@/components/other/Loading";
 
 export default function CartPageRoute() {
   const router = useRouter();
-  const { cart, updateQuantity, placeOrder } = useCart();
+  const { cart, tableNo, updateQuantity, placeOrder } = useCart();
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function CartPageRoute() {
   const handlePlaceOrder = async () => {
     try {
       await placeOrder();
-      router.push("/"); 
+      router.push("/");
     } catch (error) {
       console.error("Order failed", error);
     }
@@ -50,14 +50,15 @@ export default function CartPageRoute() {
 
   return (
     <main className="h-dvh w-full md:max-w-md md:mx-auto bg-brand-bg shadow-xl overflow-hidden">
-        <CartPage
-          cartItems={cart}
-          onBack={() => router.back()} 
-          onIncrease={handleCartIncrease}
-          onDecrease={handleCartDecrease}
-          onPlaceOrder={handlePlaceOrder}
-          totalAmount={calculateTotal()}
-        />
+      <CartPage
+        cartItems={cart}
+        tableNo={tableNo}
+        onBack={() => router.back()}
+        onIncrease={handleCartIncrease}
+        onDecrease={handleCartDecrease}
+        onPlaceOrder={handlePlaceOrder}
+        totalAmount={calculateTotal()}
+      />
     </main>
   );
 }

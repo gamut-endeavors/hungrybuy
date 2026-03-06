@@ -14,6 +14,7 @@ import { OrderCardSkeleton } from '../orders/OrderCardSkeleton';
 
 interface CartPageProps {
   cartItems: BackendCartItem[];
+  tableNo: number;
   totalAmount: number;
   onBack: () => void;
   onIncrease: (cartItemId: string) => void;
@@ -23,6 +24,7 @@ interface CartPageProps {
 
 export default function CartPage({
   cartItems,
+  tableNo,
   totalAmount,
   onBack,
   onIncrease,
@@ -61,7 +63,8 @@ export default function CartPage({
       }
     };
 
-    if (activeTab === 'orders') {
+    if (activeTab === 'orders' && cartItems.length > 0) {
+      console.log(cartItems)
       fetchActiveOrders();
     }
   }, [activeTab]);
@@ -130,7 +133,7 @@ export default function CartPage({
       <div className="flex-1 overflow-x-hidden overflow-y-auto bg-brand-bg scrollbar-hide pt-2 pb-40">
 
         <div className="px-4 sm:px-6">
-          <TableStatusCard />
+          <TableStatusCard tableNo={tableNo} />
         </div>
 
         <div
@@ -168,9 +171,13 @@ export default function CartPage({
                 orders.map((order) => (
                   <OrderCard key={order.id} order={order} onActiveTabChange={() => setActiveTab("cart")} />
                 ))
-              ) : (
+              ) : cartItems.length > 0 ? (
                 <div className="text-center py-12 text-gray-500 font-medium bg-white rounded-xl shadow-sm border border-gray-100">
                   You have no active orders yet.
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500 font-medium bg-white rounded-xl shadow-sm border border-gray-100">
+                  Please Scan Table QR.
                 </div>
               )}
             </div>

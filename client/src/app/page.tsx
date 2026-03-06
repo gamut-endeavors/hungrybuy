@@ -74,6 +74,7 @@ export default function Home() {
       filtered.sort((a, b) => {
         if (sortOrder === "asc") return a.price! - b.price!;
         if (sortOrder === "desc") return b.price! - a.price!;
+        if (sortOrder === "alpha") return a.name.localeCompare(b.name);
         return 0;
       });
     }
@@ -194,6 +195,8 @@ export default function Home() {
   const handleDialogSave = async (quantities: Record<string, number>) => {
     if (!selectedProduct) return;
 
+    const operations: Promise<void>[] = [];
+
     for (const [variantLabel, newQty] of Object.entries(quantities)) {
       const variantObj = selectedProduct.variants?.find((v) => v.label === variantLabel);
       const variantId = variantObj?.id;
@@ -203,11 +206,13 @@ export default function Home() {
       const existingItem = findCartItem(selectedProduct.id, variantId);
 
       if (existingItem) {
-        await updateQuantity(existingItem.id, newQty);
+        operations.push(updateQuantity(existingItem.id, newQty));
       } else if (newQty > 0) {
-        await addToCart(selectedProduct, newQty, variantObj);
+        operations.push(addToCart(selectedProduct, newQty, variantObj));
       }
     }
+
+    await Promise.all(operations);
   };
 
   const handleCardAddClick = async (product: MenuItem) => {
