@@ -30,7 +30,6 @@ const processQueue = (
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -90,6 +89,7 @@ api.interceptors.response.use(
           {},
           { withCredentials: true },
         );
+
         const { accessToken } = res.data.data;
 
         localStorage.setItem("accessToken", accessToken);
