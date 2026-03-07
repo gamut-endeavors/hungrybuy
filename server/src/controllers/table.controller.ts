@@ -157,3 +157,12 @@ export async function resolveQr(
     return res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+export async function verifyRestaurantTable(_: TypedRequest, res: Response) {
+  try {
+    return res.status(200).json({ message: "Table verified successfully" });
+  } catch (error) {
+    console.log("TABLE_VERIFY_ERROR", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}

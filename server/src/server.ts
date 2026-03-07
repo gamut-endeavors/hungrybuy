@@ -27,14 +27,16 @@ export function startServer() {
 
   app.disable("x-powered-by");
 
-  app.use(cookieParser());
-  app.use(express.json({ limit: "10kb" }));
   app.use(
     cors({
       origin: [process.env.FRONTEND_URL!, process.env.ADMIN_URL!],
       credentials: true,
     }),
   );
+
+  app.use(cookieParser());
+  app.use(express.json({ limit: "10kb" }));
+
   app.use(httpLogger);
 
   app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -52,7 +54,7 @@ export function startServer() {
   app.use("/cart", cartRoutes);
   app.use("/order", createOrder);
 
-  const PORT = Number(process.env.PORT) || 5000;
+  const PORT = Number(process.env.PORT!);
   server.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
   });
