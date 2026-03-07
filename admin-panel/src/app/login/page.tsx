@@ -23,10 +23,9 @@ export default function LoginPage() {
       const result = await login(email, password);
 
       if (result.success) {
-        router.push("/");
+        router.push("/orders");
       }
     } catch (error) {
-      // dev-log
       console.log("error");
     } finally {
       setEmail("");
