@@ -17,6 +17,7 @@ export async function socketAuthMiddleware(
       id: payload.id,
       role: payload.role,
       sessionId: payload.sessionId,
+      restaurantId: payload.restaurantId,
     };
 
     next();

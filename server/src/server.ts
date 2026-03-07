@@ -53,7 +53,7 @@ export function startServer() {
   app.use("/order", createOrder);
 
   const PORT = Number(process.env.PORT) || 5000;
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
   });
 }

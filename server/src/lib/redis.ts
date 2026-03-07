@@ -5,7 +5,7 @@ export const redis = new Redis({
   host: process.env.REDIS_HOST,
   port: Number(process.env.REDIS_PORT),
   username:
-    process.env.NODE_ENV === "prduction"
+    process.env.NODE_ENV === "production"
       ? process.env.REDIS_USERNAME
       : undefined,
   password: process.env.REDIS_PASSWORD,
