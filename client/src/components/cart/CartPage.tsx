@@ -69,13 +69,14 @@ export default function CartPage({
     }
   }, [activeTab]);
 
+
   useEffect(() => {
     if (!scrollContainerRef.current) return;
     const index = activeTab === 'cart' ? 0 : 1;
     const container = scrollContainerRef.current;
     const targetScrollLeft = index * container.clientWidth;
 
-    if (Math.abs(container.scrollLeft - targetScrollLeft) > 5) {
+    if (Math.abs(container.scrollLeft - targetScrollLeft) > 200) {
       isProgrammaticScroll.current = true;
 
       container.scrollTo({

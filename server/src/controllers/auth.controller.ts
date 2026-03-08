@@ -111,12 +111,19 @@ export async function refreshToken(req: TypedRequest, res: Response) {
     await deleteSession(session.id);
 
     const newSessionId = uuid();
+    let currentRestaurantId: string | undefined = undefined;
+    if (session.user.role === "RESTAURANT_OWNER") {
+      const restaurant = await prisma.restaurant.findUnique({
+        where: { ownerId: session.user.id },
+      });
+      currentRestaurantId = restaurant?.id;
+    }
 
     const newAccessToken = signAccessToken({
       id: session.user.id,
       role: session.user.role,
       sessionId: newSessionId,
-      restaurantId: undefined,
+      restaurantId: currentRestaurantId,
     });
 
     const newRefreshToken = signRefreshToken({

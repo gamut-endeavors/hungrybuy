@@ -15,11 +15,6 @@ interface UpdateProductThunkPayload {
     variants: { id?: string; label: string; price: number }[];
 }
 
-interface FetchProductsParams {
-    cursor?: string | null;
-    categoryId?: string;
-    limit?: number;
-}
 
 interface MenuState {
     products: Product[];
@@ -44,19 +39,12 @@ const initialState: MenuState = {
 
 export const fetchProducts = createAsyncThunk(
     'menu/fetchAll',
-    async ({ cursor = null, categoryId, limit = 20 }: FetchProductsParams = {}, { rejectWithValue }) => {
+    async ({ } = {}, { rejectWithValue }) => {
         try {
-            const params = new URLSearchParams();
-            if (cursor) params.set('cursor', cursor);
-            if (categoryId && categoryId !== 'all') params.set('categoryId', categoryId);
-            params.set('limit', String(limit));
 
-            const response = await api.get(`/menu?${params.toString()}`);
+            const response = await api.get(`/menu`);
             return {
                 items: response.data.data.items,
-                nextCursor: response.data.data.pagination.nextCursor,
-                hasNextPage: response.data.data.pagination.hasNextPage,
-                isFirstPage: !cursor,
             };
         } catch (error) {
             const err = error as AxiosError<{ message: string }>;
@@ -89,7 +77,7 @@ export const addProduct = createAsyncThunk(
 
             const state = getState() as RootState;
             const activeCategory = state.menu.activeCategory;
-            dispatch(fetchProducts({ categoryId: activeCategory }));
+            dispatch(fetchProducts());
 
             return newItem;
 
@@ -132,7 +120,7 @@ export const updateProduct = createAsyncThunk(
 
             const state = getState() as RootState;
             const activeCategory = state.menu.activeCategory;
-            dispatch(fetchProducts({ categoryId: activeCategory }));
+            dispatch(fetchProducts());
 
             return id;
         } catch (error) {
@@ -163,9 +151,6 @@ const menuSlice = createSlice({
     reducers: {
         setActiveCategory(state, action) {
             state.activeCategory = action.payload;
-            state.products = [];
-            state.nextCursor = null;
-            state.hasNextPage = false;
         },
     },
     extraReducers: (builder) => {
@@ -173,13 +158,8 @@ const menuSlice = createSlice({
             .addCase(fetchProducts.pending, (state) => { state.isLoading = true; })
             .addCase(fetchProducts.fulfilled, (state, action) => {
                 state.isLoading = false;
-                if (action.payload.isFirstPage) {
-                    state.products = action.payload.items;
-                } else {
-                    state.products = [...state.products, ...action.payload.items];
-                }
-                state.nextCursor = action.payload.nextCursor;
-                state.hasNextPage = action.payload.hasNextPage;
+                state.products = action.payload.items;
+                state.error = null;
             })
             .addCase(fetchProducts.rejected, (state, action) => {
                 state.isLoading = false;
