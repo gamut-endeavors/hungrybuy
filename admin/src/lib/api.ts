@@ -50,7 +50,7 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/admin/login") && // fixed from /auth/login based on your thunk
+      !originalRequest.url?.includes("/admin/login") && 
       !originalRequest.url?.includes("/auth/refresh")
     ) {
       if (isRefreshing) {
@@ -68,15 +68,13 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // REMOVED: The check for refreshToken in localStorage.
-        // The browser will automatically send the HttpOnly cookie because of `withCredentials: true`
         const res = await axios.post(
           `${BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true },
         );
 
-        const { accessToken } = res.data.data; // Ensure this matches your backend response shape
+        const { accessToken } = res.data.data;
 
         localStorage.setItem("accessToken", accessToken);
 
@@ -89,10 +87,9 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
-        // Clean up and redirect
         localStorage.removeItem("accessToken");
         localStorage.removeItem("adminUser");
-        window.location.href = "/";
+        window.location.href = "/login"; 
         return Promise.reject(refreshError);
       }
     }
