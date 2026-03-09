@@ -10,16 +10,16 @@ export default function OrderRow({ order }: OrderRowProps) {
     <>
       <tr className="border-b border-slate-400/50 tracking-wider">
         <td className="px-4 py-4 font-bold">
-          T-{order.number.toString().padStart(2, "0")}
+          T-{order.table.number.toString().padStart(2, "0")}
         </td>
 
         <td className="px-4 py-4 text-gray-500">{order.id}</td>
 
         <td className="px-4 py-4">
-          <p className="font-medium">{order.items}</p>
+          <p className="font-medium">{order.items[0].menuItem.name}</p>
         </td>
 
-        <td className="px-4 py-4 font-medium">${order.price}</td>
+        <td className="px-4 py-4 font-medium">${order.totalAmount}</td>
 
         <td className="px-4 py-4">
           <StatusDropdown status={order.status} />

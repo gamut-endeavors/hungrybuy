@@ -10,13 +10,10 @@ export const login =
       const result = await api.post("/admin/login", { email, password });
       const resData = result.data;
 
-      // dev-log
-      console.log(resData);
-
       dispatch(
         setAuth({
           user: resData.data.user,
-          accessToken: resData.data.accessToken,
+          accessToken: resData.accessToken,
         }),
       );
 

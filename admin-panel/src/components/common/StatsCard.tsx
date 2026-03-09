@@ -1,4 +1,13 @@
 import { OrderStats } from "@/config/orderStats";
+import { LucideIcon } from "lucide-react";
+
+interface StatsCardProps {
+  label: string;
+  value: string | number;
+  change: string;
+  icon: LucideIcon;
+  color: string;
+}
 
 export default function StatsCard({
   label,
@@ -6,7 +15,7 @@ export default function StatsCard({
   change,
   icon: Icon,
   color,
-}: OrderStats) {
+}: StatsCardProps) {
   return (
     <>
       <div className="p-5 bg-white rounded-xl flex flex-col gap-3 shadow-sm">

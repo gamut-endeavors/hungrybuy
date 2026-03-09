@@ -1,18 +1,18 @@
 import { store } from "@/store";
-import { logout, setAuth } from "@/store/slices/authSlice";
+import { logout, setAccessToken } from "@/store/slices/authSlice";
 import axios from "axios";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
   const currStore = store.getState();
-  let token = currStore.auth.accessToken;
-
-  if (token !== null && typeof window !== "undefined") {
-    token = localStorage.getItem("accessToken");
-  }
+  const token = currStore.auth.accessToken;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -24,26 +24,30 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== "/auth/refresh"
+    ) {
+      originalRequest._retry = true;
+
       try {
-        const refreshRes = await axios.post(
-          "/auth/refresh",
-          {},
-          { withCredentials: true },
-        );
+        const { data } = await api.post("/auth/refresh");
 
-        store.dispatch(
-          setAuth({
-            user: refreshRes.data.user,
-            accessToken: refreshRes.data.accessToken,
-          }),
-        );
+        const newToken = data.data.accessToken;
 
-        error.config.headers.Authorization = `Bearer ${refreshRes.data.accessToken}`;
+        store.dispatch(setAccessToken(newToken));
 
-        return axios(error.config);
-      } catch {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        return api(originalRequest);
+      } catch (err) {
         store.dispatch(logout());
+        window.location.href = "/login";
+
+        return Promise.reject(err);
       }
     }
 

@@ -8,7 +8,7 @@ import {
 
 export interface OrderStats {
   label: string;
-  value: string | number;
+  key: "pending" | "preparing" | "served" | "revenue";
   change: string;
   icon: LucideIcon;
   color: string;
@@ -17,28 +17,28 @@ export interface OrderStats {
 export const orderStats: OrderStats[] = [
   {
     label: "Pending Orders",
-    value: 12,
+    key: "pending",
     change: "+12%",
     icon: ClipboardList,
     color: "blue",
   },
   {
     label: "Preparing",
-    value: 8,
+    key: "preparing",
     change: "+5%",
     icon: CookingPot,
     color: "orange",
   },
   {
     label: "Served Today",
-    value: 45,
+    key: "served",
     change: "+18%",
     icon: CheckCircle,
     color: "green",
   },
   {
     label: "Total Revenue",
-    value: "1240.50",
+    key: "revenue",
     change: "+8%",
     icon: Banknote,
     color: "red",

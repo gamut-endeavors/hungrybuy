@@ -1,7 +1,7 @@
-import { orders } from "@/data/orders";
+import { Order } from "@/types/order";
 import OrderRow from "./OrderRow";
 
-export default function OrderTable() {
+export default function OrderTable({ orders }: { orders: Order[] }) {
   return (
     <>
       <div className="bg-white border border-b-0 border-slate-400/50 overflow-hidden rounded-3xl">

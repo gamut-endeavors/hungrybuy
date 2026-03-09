@@ -9,12 +9,12 @@ import { useRouter } from "next/navigation";
 import { SyntheticEvent, useState } from "react";
 
 export default function LoginPage() {
-  const { login, loading, error } = useAuth();
+  const { login } = useAuth();
 
   const router = useRouter();
 
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState<string>("eatya@hungrybuy.com");
+  const [password, setPassword] = useState<string>("eatya123");
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();

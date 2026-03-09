@@ -7,10 +7,28 @@ export type OrderStatus =
   | "SERVED"
   | "PAID";
 
+export interface OrderItem {
+  id: string;
+  menuItem: {
+    name: string;
+  };
+  variant: {
+    label: string;
+  };
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Table {
+  number: number;
+}
+
 export interface Order {
   id: string;
-  number: number;
-  items: string;
-  price: string;
+  createdAt: string;
+  items: OrderItem[];
+  table: Table;
+  totalAmount: number;
   status: OrderStatus;
 }

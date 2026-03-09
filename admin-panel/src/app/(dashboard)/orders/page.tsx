@@ -5,13 +5,12 @@ import OrderTable from "@/components/common/OrderTable";
 import StatsCard from "@/components/common/StatsCard";
 import { orderFilters } from "@/config/orderFilters";
 import { orderStats } from "@/config/orderStats";
+import useOrder from "@/hooks/useOrder";
 import { poppins } from "@/styles/font";
-import { OrderStatus } from "@/types/order";
 import { Download, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
 
 export default function OrderPage() {
-  const [activeFilter, setActiveFilter] = useState<OrderStatus>("ALL");
+  const { statusFilter, setStatusFilter, stats, orders } = useOrder();
 
   return (
     <>
@@ -27,7 +26,7 @@ export default function OrderPage() {
             <StatsCard
               key={idx}
               label={item.label}
-              value={item.value}
+              value={stats[item.key]}
               change={item.change}
               icon={item.icon}
               color={item.color}
@@ -42,8 +41,8 @@ export default function OrderPage() {
                 key={idx}
                 label={item.label}
                 value={item.value}
-                active={activeFilter === item.value}
-                onClick={setActiveFilter}
+                active={statusFilter === item.value}
+                onClick={setStatusFilter}
               />
             ))}
           </div>
@@ -59,7 +58,7 @@ export default function OrderPage() {
           </div>
         </div>
 
-        <OrderTable />
+        <OrderTable orders={orders} />
       </main>
     </>
   );
