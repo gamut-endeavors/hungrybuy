@@ -4,7 +4,7 @@ import { TableContext } from "../types/request";
 
 const ACCESS_SECRET: Secret = process.env.ACCESS_SECRET as Secret;
 const ACCESS_EXPIRY: SignOptions["expiresIn"] =
-  (process.env.ACCESS_EXPIRY as SignOptions["expiresIn"]) || "15m";
+  (process.env.ACCESS_EXPIRY as SignOptions["expiresIn"]) || "1m";
 
 const REFRESH_SECRET: Secret = process.env.REFRESH_SECRET as Secret;
 const REFRESH_EXPIRY: SignOptions["expiresIn"] =
@@ -33,12 +33,8 @@ export function verifyAccessToken(token: string): JwtPayload {
   return jwt.verify(token, ACCESS_SECRET) as JwtPayload;
 }
 
-export function verifyRefreshToken(token: string): JwtPayload {
-  return jwt.verify(token, REFRESH_SECRET) as JwtPayload;
-}
-
-export function generateTableToken(table: TableContext): string {
-  return jwt.sign({ id: table.id, number: table.number }, TABLE_SECRET, {
+export function generateTableToken(payload: TableContext): string {
+  return jwt.sign(payload, TABLE_SECRET, {
     expiresIn: TABLE_EXPIRY,
   });
 }

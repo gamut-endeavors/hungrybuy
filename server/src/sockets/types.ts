@@ -6,5 +6,6 @@ export interface AuthenticatedSocket extends Socket {
     id: string;
     role: Role;
     sessionId: string;
+    restaurantId?: string;
   };
 }

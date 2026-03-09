@@ -14,7 +14,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 let isRefreshing = false;
 let failedQueue: FailedQueueItem[] = [];
 
-const processQueue = (error: AxiosError | Error | null, token: string | null = null) => {
+const processQueue = (
+  error: AxiosError | Error | null,
+  token: string | null = null,
+) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -42,7 +45,22 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<unknown>) => {
+  async (error: AxiosError<{ message: string }>) => {
+
+
+    const errorMessage = error.response?.data?.message;
+    if (
+      error.response?.status === 401 &&
+      (errorMessage === "Invalid or expired table session token" ||
+        errorMessage === "Table session token invalid")
+    ) {
+
+      localStorage.removeItem("table");
+      window.location.href = "/";
+
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
     if (
@@ -66,14 +84,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token");
+        const res = await axios.post(
+          `${API_URL}/auth/refresh`,
+          {},
+          { withCredentials: true },
+        );
 
-        const res = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+        const { accessToken } = res.data.data;
 
         localStorage.setItem("accessToken", accessToken);
-        if (newRefreshToken) localStorage.setItem("refreshToken", newRefreshToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
@@ -86,10 +105,10 @@ api.interceptors.response.use(
         isRefreshing = false;
 
         localStorage.clear();
-        window.location.href = "/";
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
-  }
+  },
 );

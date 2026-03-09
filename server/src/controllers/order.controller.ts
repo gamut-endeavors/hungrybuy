@@ -6,6 +6,7 @@ import {
   UpdateOrderStatusBody,
 } from "../validation/order.schema";
 import { Prisma } from "@prisma/client";
+import { io } from "../sockets";
 
 export async function getAllOrders(req: TypedRequest, res: Response) {
   try {
@@ -64,12 +65,12 @@ export async function getActiveOrders(req: TypedRequest, res: Response) {
             id: true,
             quantity: true,
             price: true,
-            menuItem: { select: { name: true } },
-            variant: { select: { label: true } },
+            menuItem: { select: { id: true, name: true } },
+            variant: { select: { id: true, label: true } },
           },
         },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
     });
 
     return res
@@ -222,6 +223,7 @@ export async function createOrder(req: TypedRequest, res: Response) {
         },
         select: {
           id: true,
+          tableId: true,
           status: true,
           totalAmount: true,
           createdAt: true,
@@ -246,6 +248,8 @@ export async function createOrder(req: TypedRequest, res: Response) {
 
       return newOrder;
     });
+
+    io.to(`admin:${restaurantId}`).emit("order:new", { order: result });
 
     return res
       .status(201)

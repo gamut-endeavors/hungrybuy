@@ -67,8 +67,10 @@ export async function adminLogin(
       .status(200)
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/auth/refresh",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({
         message: "User logged in successfully",

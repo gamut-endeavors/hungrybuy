@@ -18,7 +18,6 @@ import {
   CreateVariantParams,
   DeleteMenuItemParams,
   DeleteVariantParams,
-  GetMenuQuery,
   GetVariantParams,
   UpdateMenuItemParams,
   UpdateMenuItemsBody,
@@ -32,7 +31,6 @@ const router = Router();
 router.get(
   "/",
   requireRole(["PLATFORM_ADMIN", "RESTAURANT_OWNER", "CUSTOMER"]),
-  validate(GetMenuQuery, "query"),
   resolveTenant,
   getMenu,
 );

@@ -1,7 +1,6 @@
 import { NextFunction, Response } from "express";
 import { JwtPayload, verifyAccessToken } from "../utils/jwt";
 import { TypedRequest } from "../types/request";
-import { getSession } from "../lib/session";
 
 export async function attachUserMiddleware(
   req: TypedRequest,
@@ -20,9 +19,6 @@ export async function attachUserMiddleware(
 
   try {
     const payload: JwtPayload = verifyAccessToken(token);
-
-    // const session = await getSession(payload.sessionId);
-    // if (!session) return next();
 
     req.user = {
       id: payload.id,

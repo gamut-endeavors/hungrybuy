@@ -5,6 +5,7 @@ import {
   getAllTables,
   generateTableQr,
   resolveQr,
+  verifyRestaurantTable,
 } from "../controllers/table.controller";
 import { requireRole } from "../middlewares/role.middleware";
 import { validate } from "../middlewares/validate.middleware";
@@ -15,6 +16,7 @@ import {
   ResolveQrParams,
 } from "../validation/table.schema";
 import { resolveTenant } from "../middlewares/restaurant.middleware";
+import { verifyTable } from "../middlewares/table.middleware";
 
 const router = Router();
 
@@ -49,6 +51,13 @@ router.get(
   requireRole(["CUSTOMER"]),
   validate(ResolveQrParams, "params"),
   resolveQr,
+);
+
+router.get(
+  "/verify",
+  requireRole(["CUSTOMER"]),
+  verifyTable,
+  verifyRestaurantTable,
 );
 
 export default router;

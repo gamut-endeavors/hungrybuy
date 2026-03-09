@@ -1,0 +1,151 @@
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { MenuItem, Category } from "@/lib/types";
+import { AxiosError } from "axios";
+
+const globalCache = {
+    categories: null as Category[] | null,
+    menu: {} as Record<string, { items: MenuItem[]; nextCursor: string | null; hasNextPage: boolean }>,
+};
+
+
+// --- HOOK 1: CATEGORIES ---
+export const useCategories = () => {
+    const [categories, setCategories] = useState<Category[]>(globalCache.categories || []);
+    const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
+
+
+    useEffect(() => {
+
+        const fetchCategories = async () => {
+            try {
+                setIsCategoriesLoading(true);
+
+                const res = await api.get("/categories");
+                const dbCategories: Category[] = res.data.data.categories;
+
+                globalCache.categories = dbCategories;
+                setCategories(dbCategories);
+            } catch (error) {
+                const err = error as AxiosError;
+                console.error(err, "Failed to load categories");
+            }
+            finally {
+                setIsCategoriesLoading(false);
+            }
+        };
+
+        if (!globalCache.categories) {
+            fetchCategories();
+        }
+    }, []);
+
+    return { categories, isCategoriesLoading };
+};
+
+// --- HOOK 2: MENU PRODUCTS ---
+// export const useMenu = (
+//     user: any,
+//     selectedCategory: string,
+//     dietFilter: string,
+//     debouncedSearchQuery: string,
+//     sortOrder: string,
+//     handleAuthError: any
+// ) => {
+//     const cacheKey = generateCacheKey(selectedCategory, dietFilter, debouncedSearchQuery, sortOrder);
+
+//     const cachedData = globalCache.menu[cacheKey];
+
+//     const activeCacheKeyRef = useRef(cacheKey);
+
+//     useEffect(() => {
+//         activeCacheKeyRef.current = cacheKey;
+//     }, [cacheKey]);
+
+//     const [products, setProducts] = useState<MenuItem[]>(cachedData?.items || []);
+//     const [nextCursor, setNextCursor] = useState<string | null>(cachedData?.nextCursor || null);
+//     const [hasNextPage, setHasNextPage] = useState<boolean>(cachedData?.hasNextPage || false);
+
+//     const [isMenuLoading, setIsMenuLoading] = useState(!cachedData);
+//     const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+//     const fetchMenu = useCallback(
+//         async (isLoadMore: boolean = false, cursorToUse: string | null = null) => {
+//             if (!user) return;
+
+//             try {
+//                 if (isLoadMore) setIsFetchingMore(true);
+//                 else if (!globalCache.menu[cacheKey]) setIsMenuLoading(true);
+
+//                 const params = new URLSearchParams({ limit: "20" });
+
+//                 if (isLoadMore && cursorToUse) params.append("cursor", cursorToUse);
+//                 if (selectedCategory !== "all") params.append("categoryId", selectedCategory);
+//                 if (dietFilter !== "all") params.append("foodType", dietFilter === "veg" ? "VEG" : "NON_VEG");
+//                 if (debouncedSearchQuery.trim().length >= 2) params.append("search", debouncedSearchQuery.trim());
+//                 if (sortOrder !== "popular") {
+//                     params.append("sortBy", "price");
+//                     params.append("sortOrder", sortOrder);
+//                 }
+
+//                 const endpoint = `/menu?${params.toString()}`;
+//                 const res = await api.get(endpoint);
+//                 const data = res.data.data;
+
+//                 const readyProducts = data.items.map((p: MenuItem) => ({
+//                     ...p,
+//                     qty: 42,
+//                 }));
+
+//                 const currentCachedItems = globalCache.menu[cacheKey]?.items || [];
+//                 const newProducts = isLoadMore ? [...currentCachedItems, ...readyProducts] : readyProducts;
+
+
+//                 globalCache.menu[cacheKey] = {
+//                     items: newProducts,
+//                     nextCursor: data.pagination.nextCursor,
+//                     hasNextPage: data.pagination.hasNextPage,
+//                 };
+
+
+//                 if (activeCacheKeyRef.current !== cacheKey) {
+//                     return;
+//                 }
+
+//                 setProducts(newProducts);
+//                 setNextCursor(data.pagination.nextCursor);
+//                 setHasNextPage(data.pagination.hasNextPage);
+
+//             } catch (error) {
+//                 if (activeCacheKeyRef.current === cacheKey) {
+//                     handleAuthError(error, "Failed to load menu");
+//                 }
+//             } finally {
+//                 if (activeCacheKeyRef.current === cacheKey) {
+//                     setIsMenuLoading(false);
+//                     setIsFetchingMore(false);
+//                 }
+//             }
+//         },
+//         [user, cacheKey, selectedCategory, dietFilter, debouncedSearchQuery, sortOrder, handleAuthError]
+//     );
+
+//     useEffect(() => {
+//         const currentCache = globalCache.menu[cacheKey];
+//         setProducts(currentCache?.items || []);
+//         setNextCursor(currentCache?.nextCursor || null);
+//         setHasNextPage(currentCache?.hasNextPage || false);
+//         setIsMenuLoading(!currentCache);
+
+//         fetchMenu(false, null);
+//     }, [cacheKey, fetchMenu]);
+
+//     return {
+//         products,
+//         nextCursor,
+//         hasNextPage,
+//         isMenuLoading,
+//         isFetchingMore,
+//         fetchMenu,
+//     };
+// };

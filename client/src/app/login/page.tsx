@@ -5,7 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { api } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { AxiosError } from "axios";
 import PhoneStep from "./PhoneStep";
 import OtpStep from "./OtpStep";
@@ -26,13 +26,18 @@ export default function LoginPage() {
     try {
       if (phone.length < 10) throw new Error("Invalid phone number");
 
+      setTimeout(() => {
+        setStep("OTP");
+      }, 100);
+
       await api.post("/auth/send-otp", { phone });
 
       setDirection(1);
       setPhoneNumber(phone);
-      setStep("OTP");
       toast.success("Code sent!");
     } catch (error) {
+      setStep("PHONE");
+      setDirection(0);
       console.error(error);
       const err = error as AxiosError<{ message: string }>;
       toast.error(err.response?.data?.message || "Failed to send code");
@@ -50,10 +55,14 @@ export default function LoginPage() {
   const handleVerifyOtp = async (otp: string) => {
     setIsLoading(true);
     try {
-      const res = await api.post("/auth/login", { phone: phoneNumber, otp });
+      const res = await api.post(
+        "/auth/login",
+        { phone: phoneNumber, otp },
+        { withCredentials: true },
+      );
 
-      const { accessToken, refreshToken, data } = res.data;
-      login(accessToken, refreshToken, data.user);
+      const { accessToken, data } = res.data;
+      login(accessToken, data.user);
 
       toast.success("Login Successful!");
       router.push("/");
