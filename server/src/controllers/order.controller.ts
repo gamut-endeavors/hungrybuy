@@ -29,6 +29,11 @@ export async function getAllOrders(req: TypedRequest, res: Response) {
             variant: { select: { label: true } },
           },
         },
+        table: {
+          select: {
+            number: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

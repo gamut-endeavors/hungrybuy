@@ -89,6 +89,9 @@ export async function loginUser(
 export async function refreshToken(req: TypedRequest, res: Response) {
   try {
     const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Missing refresh token" });
+    }
 
     const session = await prisma.authSession.findFirst({
       where: {
@@ -127,7 +130,7 @@ export async function refreshToken(req: TypedRequest, res: Response) {
       id: session.user.id,
       role: session.user.role,
       sessionId: newSessionId,
-      restaurantId: undefined,
+      restaurantId: restaurant?.id ?? undefined,
     });
 
     await prisma.authSession.create({
@@ -136,8 +139,8 @@ export async function refreshToken(req: TypedRequest, res: Response) {
         userId: session.user.id,
         accessTokenHash: hashToken(newAccessToken),
         refreshTokenHash: hashToken(newRefreshToken),
-        accessExpiry: new Date(Date.now() + 15 * 50 * 1000),
-        refreshExpiry: new Date(Date.now() + 7 * 24 * 40 * 60 * 1000),
+        accessExpiry: new Date(Date.now() + 15 * 60 * 1000),
+        refreshExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         userAgent: req.headers["user-agent"],
         ipAddress: req.ip,
       },
