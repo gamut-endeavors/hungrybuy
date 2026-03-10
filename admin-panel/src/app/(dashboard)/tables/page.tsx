@@ -1,7 +1,14 @@
+"use client"
+
+import TableGrid from "@/components/common/TableGrid";
+import useTable from "@/hooks/useTable";
+
 export default function TablesPage() {
+  const { tables } = useTable();
+
   return (
     <>
-      <h1>Tables Page</h1>
+      <TableGrid tables={tables} />
     </>
   );
 }
