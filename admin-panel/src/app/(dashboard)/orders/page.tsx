@@ -3,6 +3,7 @@
 import OrderFilterPill from "@/components/common/OrderFilterPill";
 import OrderTable from "@/components/common/OrderTable";
 import StatsCard from "@/components/common/StatsCard";
+import Title from "@/components/ui/Title";
 import { orderFilters } from "@/config/orderFilters";
 import { orderStats } from "@/config/orderStats";
 import useOrder from "@/hooks/useOrder";
@@ -16,9 +17,7 @@ export default function OrderPage() {
     <>
       <main className={`p-3 flex flex-col gap-5 ${poppins.className}`}>
         <div className="my-2">
-          <h1 className="text-3xl font-semibold tracking-wider">
-            Order Management
-          </h1>
+          <Title text="Order Management" />
         </div>
 
         <div className="grid grid-cols-4 gap-6">
@@ -27,7 +26,6 @@ export default function OrderPage() {
               key={idx}
               label={item.label}
               value={stats[item.key]}
-              change={item.change}
               icon={item.icon}
               color={item.color}
             />
