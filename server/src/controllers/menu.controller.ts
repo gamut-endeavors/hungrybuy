@@ -17,7 +17,7 @@ import {
 } from "../validation/menu.schema";
 import { buildMenuCacheKey, getCache, setCache } from "../utils/cache";
 
-export async function getMenu(req: TypedRequest<{}, {}, {}>, res: Response) {
+export async function getMenu(req: TypedRequest, res: Response) {
   try {
     const { id: restaurantId } = req.restaurant!;
 

@@ -13,7 +13,7 @@ export default function Sidebar() {
   return (
     <>
       <aside
-        className={`w-64 flex flex-col justify-between ${poppins.className} border-r-2 border-r-gray-300`}
+        className={`bg-white w-64 flex flex-col justify-between ${poppins.className} border-r-2 border-r-gray-300`}
       >
         <div>
           <div className="p-2 mb-6 flex items-center gap-3 border-b-2 border-b-gray-300">
