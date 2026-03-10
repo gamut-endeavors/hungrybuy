@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/lib/store/store';
-import { addTable, deleteTable } from '@/lib/store/features/tableSlice';
+import { addTable, deleteTable, fetchTables } from '@/lib/store/features/tableSlice';
 import { Table } from '@/lib/types';
 
 import TablesGrid from '@/components/admin/TablesGrid';
 import AddTableModal from '@/components/modals/AddTableModal';
 import QrCodeModal from '@/components/modals/QrCodeModal';
+import { fetchProducts } from '@/lib/store/features/menuSlice';
 
 export default function TablesPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -17,6 +18,10 @@ export default function TablesPage() {
 
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [selectedQrTable, setSelectedQrTable] = useState<Table | null>(null);
+
+  useEffect(() => {
+      dispatch(fetchTables());
+    }, [dispatch]);
 
   const handleAddTable = async (newTableInput: string) => {
     const number = parseInt(newTableInput);

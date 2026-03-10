@@ -5,9 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/lib/store/store';
 import { logout } from '@/lib/store/features/authSlice';
-import { fetchTables } from '@/lib/store/features/tableSlice';
-import { fetchCategories } from '@/lib/store/features/categorySlice';
-import { fetchProducts } from '@/lib/store/features/menuSlice';
 import { fetchOrders } from '@/lib/store/features/orderSlice';
 
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -34,9 +31,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(fetchTables());
-      dispatch(fetchCategories());
-      dispatch(fetchProducts({ categoryId: "all" }));
       dispatch(fetchOrders());
     }
   }, [isAuthenticated, dispatch]);
