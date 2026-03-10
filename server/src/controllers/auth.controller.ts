@@ -12,6 +12,32 @@ import { LoginUserBody } from "../validation/auth.schema";
 import { hashToken } from "../utils/hash";
 import { deleteSession } from "../lib/session";
 
+export async function getUser(req: TypedRequest, res: Response) {
+  try {
+    const { id } = req.user!;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        phone: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      data: { user },
+    });
+  } catch (error) {
+    console.log("AUTH_GET_USER_ERROR:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+}
+
 export async function loginUser(
   req: TypedRequest<{}, LoginUserBody, {}>,
   res: Response,
