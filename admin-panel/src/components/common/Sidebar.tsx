@@ -24,7 +24,7 @@ export default function Sidebar() {
             </div>
 
             <div className="font-semibold">
-              <Link href={""}>Hungrybuy</Link>
+              <Link href={"/orders"}>Hungrybuy</Link>
               <p className="text-gray-400 tracking-wide">ADMIN PANEL</p>
             </div>
           </div>
