@@ -35,5 +35,6 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
     console.log(error);
   } finally {
     dispatch(logout());
+    window.location.href = "/login";
   }
 };
