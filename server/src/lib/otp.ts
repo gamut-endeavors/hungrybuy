@@ -8,9 +8,9 @@ const client = twilio(
 export async function sendUserOtp(phone: string, otp: string) {
   try {
     const message = await client.messages.create({
-      body: ``,
+      body: `Your otp is ${otp}`,
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone,
+      to: `+91${phone}`,
     });
 
     return message.sid;

@@ -2,21 +2,39 @@ import { MenuItem } from "@/types/menu";
 import Image from "next/image";
 import Switch from "../ui/Switch";
 import { Pen, Trash2 } from "lucide-react";
+import { deleteMenuItem } from "@/api/menu";
 
-export default function MenuItemRow({ item }: { item: MenuItem }) {
+export default function MenuItemRow({
+  last,
+  item,
+}: {
+  last?: boolean;
+  item: MenuItem;
+}) {
+  async function handleDeleteItem() {
+    await deleteMenuItem(item.id);
+  }
+
   return (
     <>
-      <tr className="border-b border-slate-400/50 tracking-wider">
-        <td className="px-4 py-4 font-bold flex items-center gap-3">
-          <div style={{ width: "50px", height: "50px", position: "relative" }}>
+      <tr
+        className={`${last ? "" : "border-b border-slate-400/50"} tracking-wider`}
+      >
+        <td className="px-4 py-4 flex items-center gap-3">
+          <div style={{ width: "55px", height: "55px", position: "relative" }}>
             <Image
-              src={item.image}
+              src={item.image || "/burger.jpeg"}
               alt={item.name}
               fill
               style={{ objectFit: "cover" }}
+              className="rounded-md"
             />
           </div>
-          {item.name}
+
+          <div>
+            <p className="font-bold">{item.name}</p>
+            <p className="text-gray-400 font-medium">{item.description}</p>
+          </div>
         </td>
 
         <td className="px-4 py-4 text-gray-500">{item.category.name}</td>
@@ -42,7 +60,10 @@ export default function MenuItemRow({ item }: { item: MenuItem }) {
               <Pen size={20} />
             </button>
 
-            <button className="p-1 border border-gray-300 text-gray-500 rounded-md">
+            <button
+              onClick={handleDeleteItem}
+              className="p-1 border border-gray-300 text-gray-500 rounded-md"
+            >
               <Trash2 size={20} />
             </button>
           </div>
