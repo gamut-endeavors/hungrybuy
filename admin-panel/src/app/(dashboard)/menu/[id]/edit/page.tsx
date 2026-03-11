@@ -4,6 +4,7 @@ import MenuForm from "@/components/common/MenuForm";
 import Title from "@/components/ui/Title";
 import useMenu from "@/hooks/useMenu";
 import { poppins } from "@/styles/font";
+import { MenuFormValue } from "@/types/menu";
 import { useParams, useRouter } from "next/navigation";
 
 export default function MenuEditPage() {
@@ -15,7 +16,7 @@ export default function MenuEditPage() {
 
   if (!menuItem) return null;
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: MenuFormValue) => {
     updateItem({ id: menuItem.id, values });
     router.push("/menu");
   };

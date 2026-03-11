@@ -12,6 +12,9 @@ import { MenuFormValue, MenuItem } from "@/types/menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+const EMPTY_MENU: MenuItem[] = [];
+const EMPTY_CATEGORIES: Category[] = [];
+
 export default function useMenu() {
   const qc = useQueryClient();
 
@@ -30,8 +33,8 @@ export default function useMenu() {
     select: (data) => data.data.categories,
   });
 
-  const items: MenuItem[] = menuQuery.data ?? [];
-  const categories: Category[] = categoryQuery.data ?? [];
+  const items: MenuItem[] = menuQuery.data ?? EMPTY_MENU;
+  const categories: Category[] = categoryQuery.data ?? EMPTY_CATEGORIES;
 
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -52,7 +55,7 @@ export default function useMenu() {
       outOfStock: items.filter((item) => !item.isAvailable).length,
       categories: categories.length,
     };
-  }, [items]);
+  }, [items, categories]);
 
   // -- -- -- MUTATIONS -- -- --
 

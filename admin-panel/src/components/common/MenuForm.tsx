@@ -2,7 +2,7 @@
 
 import { Category } from "@/types/category";
 import { MenuFormValue } from "@/types/menu";
-import { SyntheticEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useState } from "react";
 import { Camera } from "lucide-react";
 
 interface MenuFormProps {
@@ -29,13 +29,14 @@ export default function MenuForm({
   loading,
   onCancel,
 }: MenuFormProps) {
-  const [values, setValues] = useState<MenuFormValue>(initialValues);
+  const [values, setValues] = useState<MenuFormValue>(
+    () => defaultValues ?? initialValues,
+  );
 
-  useEffect(() => {
-    if (defaultValues) setValues(defaultValues);
-  }, [defaultValues]);
-
-  function handleChange(key: keyof MenuFormValue, value: any) {
+  function handleChange(
+    key: keyof MenuFormValue,
+    value: (typeof values)[keyof MenuFormValue],
+  ) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 

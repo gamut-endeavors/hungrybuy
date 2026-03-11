@@ -1,6 +1,7 @@
 import { api } from "@/api/axios";
 import { AppDispatch } from "..";
 import { startAuth, setAuth, setError, logout } from "@/store/slices/authSlice";
+import { AxiosError } from "axios";
 
 export const login =
   (email: string, password: string) => async (dispatch: AppDispatch) => {
@@ -18,8 +19,12 @@ export const login =
       );
 
       return { success: true };
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Login failed";
+    } catch (error: unknown) {
+      let message = "Login failed";
+
+      if (error instanceof AxiosError) {
+        message = error.response?.data?.message || "Login failed";
+      }
 
       dispatch(setError(message));
       return { success: false, message };
