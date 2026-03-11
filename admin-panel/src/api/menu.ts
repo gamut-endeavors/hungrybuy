@@ -21,8 +21,19 @@ export async function createMenuItem(values: MenuFormValue) {
   return data;
 }
 
-export async function updateMenuItem(id: string, values: MenuFormValue) {
-  const { data } = await api.patch(`/menu/${id}`, values);
+export async function updateMenuItem({
+  id,
+  values,
+}: {
+  id: string;
+  values: FormData;
+}) {
+  const { data } = await api.patch(`/menu/${id}`, values, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
   return data;
 }
 

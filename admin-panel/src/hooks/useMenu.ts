@@ -61,6 +61,11 @@ export default function useMenu() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: updateMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: deleteMenuItem,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
@@ -69,6 +74,24 @@ export default function useMenu() {
   // -- -- -- ACTIONS -- -- --
 
   const createItem = (values: MenuFormValue) => createMutation.mutate(values);
+  const updateItem = (payload: { id: string; values: MenuFormValue }) => {
+    const fd = new FormData();
+
+    fd.append("name", payload.values.name);
+    fd.append("description", payload.values.description);
+    fd.append("price", String(payload.values.price));
+    fd.append("categoryId", payload.values.categoryId);
+    fd.append("foodType", payload.values.foodType);
+
+    if (payload.values.image) {
+      fd.append("image", payload.values.image);
+    }
+
+    updateMutation.mutate({
+      id: payload.id,
+      values: fd,
+    });
+  };
   const deleteItem = (id: string) => deleteMutation.mutate(id);
 
   return {
@@ -82,9 +105,11 @@ export default function useMenu() {
     setSearch,
 
     createItem,
+    updateItem,
     deleteItem,
 
     creating: createMutation.isPending,
+    updating: updateMutation.isPending,
     deleting: deleteMutation.isPending,
 
     isLoading: menuQuery.isLoading,
