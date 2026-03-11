@@ -1,14 +1,18 @@
 import { Order } from "@/types/order";
 import StatusDropdown from "./StatusDropdown";
 
-interface OrderRowProps {
+export default function OrderRow({
+  last,
+  order,
+}: {
+  last?: boolean;
   order: Order;
-}
-
-export default function OrderRow({ order }: OrderRowProps) {
+}) {
   return (
     <>
-      <tr className="border-b border-slate-400/50 tracking-wider">
+      <tr
+        className={`${last ? "" : "border-b border-slate-400/50"} tracking-wider`}
+      >
         <td className="px-4 py-4 font-bold">
           T-{order.table.number.toString().padStart(2, "0")}
         </td>

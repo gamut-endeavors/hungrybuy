@@ -3,3 +3,12 @@
 @theme {
   --color-orange: #ee5b2b;
 }
+
+:root::-webkit-scrollbar {
+  display: none;
+}
+
+:root {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
