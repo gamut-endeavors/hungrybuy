@@ -26,7 +26,7 @@ export default function LoginPage() {
         router.push("/orders");
       }
     } catch (error) {
-      console.log("error");
+      console.log("error", error);
     } finally {
       setEmail("");
       setPassword("");

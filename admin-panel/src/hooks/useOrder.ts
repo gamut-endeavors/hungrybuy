@@ -3,6 +3,8 @@ import { Order, OrderStatus } from "@/types/order";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+const EMPTY_ORDERS: Order[] = [];
+
 export default function useOrder() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus>("ALL");
   const [sortBy, setSortBy] = useState<"price">("price");
@@ -13,7 +15,7 @@ export default function useOrder() {
     select: (data) => data.data.orders,
   });
 
-  const orders: Order[] = query.data ?? [];
+  const orders: Order[] = query.data ?? EMPTY_ORDERS;
 
   const filteredOrders = useMemo(() => {
     let result = [...orders];

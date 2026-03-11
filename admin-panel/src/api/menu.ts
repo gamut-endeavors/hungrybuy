@@ -11,13 +11,29 @@ export async function getCategories() {
   return data;
 }
 
+export async function toggleMenuAvailability(id: string, isAvailable: boolean) {
+  const { data } = await api.patch(`/menu/${id}`, { isAvailable: isAvailable });
+  return data;
+}
+
 export async function createMenuItem(values: MenuFormValue) {
   const { data } = await api.post("/menu/create", values);
   return data;
 }
 
-export async function toggleMenuAvailability(id: string, isAvailable: boolean) {
-  const { data } = await api.patch(`/menu/${id}`, { isAvailable: isAvailable });
+export async function updateMenuItem({
+  id,
+  values,
+}: {
+  id: string;
+  values: FormData;
+}) {
+  const { data } = await api.patch(`/menu/${id}`, values, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
   return data;
 }
 

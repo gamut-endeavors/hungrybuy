@@ -1,8 +1,11 @@
+"use client";
+
 import { MenuItem } from "@/types/menu";
 import Image from "next/image";
 import Switch from "../ui/Switch";
 import { Pen, Trash2 } from "lucide-react";
-import { deleteMenuItem } from "@/api/menu";
+import useMenu from "@/hooks/useMenu";
+import { useRouter } from "next/navigation";
 
 export default function MenuItemRow({
   last,
@@ -11,9 +14,8 @@ export default function MenuItemRow({
   last?: boolean;
   item: MenuItem;
 }) {
-  async function handleDeleteItem() {
-    await deleteMenuItem(item.id);
-  }
+  const { deleteItem } = useMenu();
+  const router = useRouter();
 
   return (
     <>
@@ -56,12 +58,15 @@ export default function MenuItemRow({
 
         <td className="px-4 py-4">
           <div className="flex items-center gap-2">
-            <button className="p-1 border border-gray-300 text-gray-500 rounded-md">
+            <button
+              onClick={() => router.push(`/menu/${item.id}/edit`)}
+              className="p-1 border border-gray-300 text-gray-500 rounded-md"
+            >
               <Pen size={20} />
             </button>
 
             <button
-              onClick={handleDeleteItem}
+              onClick={() => deleteItem(item.id)}
               className="p-1 border border-gray-300 text-gray-500 rounded-md"
             >
               <Trash2 size={20} />

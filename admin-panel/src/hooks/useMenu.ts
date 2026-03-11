@@ -1,16 +1,27 @@
 "use client";
 
-import { getCategories, getMenu } from "@/api/menu";
+import {
+  createMenuItem,
+  deleteMenuItem,
+  getCategories,
+  getMenu,
+  updateMenuItem,
+} from "@/api/menu";
 import { Category } from "@/types/category";
-import { MenuItem } from "@/types/menu";
-import { useQuery } from "@tanstack/react-query";
+import { MenuFormValue, MenuItem } from "@/types/menu";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+const EMPTY_MENU: MenuItem[] = [];
+const EMPTY_CATEGORIES: Category[] = [];
+
 export default function useMenu() {
+  const qc = useQueryClient();
+
   const [category, setCategory] = useState<string>("ALL");
   const [search, setSearch] = useState<string>("");
 
-  const query = useQuery({
+  const menuQuery = useQuery({
     queryKey: ["menu", search],
     queryFn: getMenu,
     select: (data) => data.data.items,
@@ -22,8 +33,8 @@ export default function useMenu() {
     select: (data) => data.data.categories,
   });
 
-  const items: MenuItem[] = query.data ?? [];
-  const categories: Category[] = categoryQuery.data ?? [];
+  const items: MenuItem[] = menuQuery.data ?? EMPTY_MENU;
+  const categories: Category[] = categoryQuery.data ?? EMPTY_CATEGORIES;
 
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -44,20 +55,67 @@ export default function useMenu() {
       outOfStock: items.filter((item) => !item.isAvailable).length,
       categories: categories.length,
     };
-  }, [items]);
+  }, [items, categories]);
+
+  // -- -- -- MUTATIONS -- -- --
+
+  const createMutation = useMutation({
+    mutationFn: createMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
+  // -- -- -- ACTIONS -- -- --
+
+  const createItem = (values: MenuFormValue) => createMutation.mutate(values);
+  const updateItem = (payload: { id: string; values: MenuFormValue }) => {
+    const fd = new FormData();
+
+    fd.append("name", payload.values.name);
+    fd.append("description", payload.values.description);
+    fd.append("price", String(payload.values.price));
+    fd.append("categoryId", payload.values.categoryId);
+    fd.append("foodType", payload.values.foodType);
+
+    if (payload.values.image) {
+      fd.append("image", payload.values.image);
+    }
+
+    updateMutation.mutate({
+      id: payload.id,
+      values: fd,
+    });
+  };
+  const deleteItem = (id: string) => deleteMutation.mutate(id);
 
   return {
     items: filteredItems,
-    stats,
     categories,
+    stats,
 
     category,
     setCategory,
-
     search,
     setSearch,
 
-    isLoading: query.isLoading,
-    refetch: query.refetch,
+    createItem,
+    updateItem,
+    deleteItem,
+
+    creating: createMutation.isPending,
+    updating: updateMutation.isPending,
+    deleting: deleteMutation.isPending,
+
+    isLoading: menuQuery.isLoading,
+    refetch: menuQuery.refetch,
   };
 }
