@@ -7,18 +7,21 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { initializeAuthAction } from "../../store/actions/authAction";
 import { api } from "@/lib/api";
 import { fetchCartAction } from "@/store/actions/cartAction";
+import { AxiosError } from "axios";
+import Loading from "../other/Loading";
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
     const dispatch = useAppDispatch();
-    const tableToken = useAppSelector((state) => state.cart.tableToken);
+
+    const isAuthLoading = useAppSelector((state) => state.auth.isLoading);
 
     useEffect(() => {
         dispatch(initializeAuthAction());
-        if (tableToken) {
-            api.defaults.headers.common["x-table-token"] = tableToken;
-            dispatch(fetchCartAction());
-        }
-    }, [dispatch, tableToken]);
+    }, [dispatch]);
+
+    if (isAuthLoading) {
+        return <Loading />;
+    }
 
     return <>{children}</>;
 }

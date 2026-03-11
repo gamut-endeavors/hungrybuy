@@ -2,7 +2,7 @@
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProductsAction } from "@/store/actions/menuAction";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { AxiosError } from "axios";
 
 export function useMenu() {

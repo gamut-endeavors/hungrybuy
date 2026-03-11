@@ -7,26 +7,13 @@ export interface User {
 
 interface AuthState {
     user: User | null;
+    accessToken: string | null;
     isLoading: boolean;
 }
 
-const getInitialUser = (): User | null => {
-    if (typeof window !== "undefined") {
-        const storedUser = localStorage.getItem("user");
-        const token = localStorage.getItem("accessToken");
-        if (token && storedUser) {
-            try {
-                return JSON.parse(storedUser);
-            } catch {
-                return null;
-            }
-        }
-    }
-    return null;
-};
-
 const initialState: AuthState = {
-    user: getInitialUser(),
+    user: null,
+    accessToken: null,
     isLoading: true,
 };
 
@@ -37,11 +24,17 @@ const authSlice = createSlice({
         setAuthLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
-        setUser: (state, action: PayloadAction<User | null>) => {
-            state.user = action.payload;
+        setCredentials: (state, action: PayloadAction<{ user: User; accessToken: string } | null>) => {
+            if (action.payload) {
+                state.user = action.payload.user;
+                state.accessToken = action.payload.accessToken;
+            } else {
+                state.user = null;
+                state.accessToken = null;
+            }
         },
     },
 });
 
-export const { setAuthLoading, setUser } = authSlice.actions;
+export const { setAuthLoading, setCredentials } = authSlice.actions;
 export default authSlice.reducer;
