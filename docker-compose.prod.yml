@@ -6,10 +6,8 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
-      - pghungrybuy:/var/lib/postgresql/data/
+      - pghungrybuy:/var/lib/postgresql/data
     networks:
       - app-network
 
@@ -22,8 +20,6 @@ services:
       --maxmemory ${REDIS_MAX_MEMORY}
       --maxmemory-policy ${REDIS_MAX_MEMORY_POLICY}
       --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "6379:6379"
     volumes:
       - redisdata:/data
     networks:
@@ -32,56 +28,39 @@ services:
   server:
     build:
       context: ./server
-      dockerfile: Dockerfile.dev
-    container_name: hungrybuy-server-dev
-    command: npm run dev
+    container_name: hungrybuy-server
     env_file:
       - ./server/.env
     depends_on:
       - postgres
     ports:
       - "5000:5000"
-    volumes:
-      - ./server:/app
-      - /app/node_modules
     networks:
       - app-network
 
   client:
     build:
       context: ./client
-      dockerfile: Dockerfile.dev
-    container_name: hungrybuy-client-dev
-    command: npm run dev
+    container_name: hungrybuy-client
     env_file:
       - ./client/.env
     depends_on:
       - server
     ports:
       - "3000:3000"
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-      - /app/.next
     networks:
       - app-network
 
   admin:
     build:
       context: ./admin
-      dockerfile: Dockerfile.dev
-    container_name: hungrybuy-admin-dev
-    command: npm run dev
+    container_name: hungrybuy-admin
     env_file:
       - ./admin/.env
     depends_on:
       - server
     ports:
       - "8000:3000"
-    volumes:
-      - ./admin:/app
-      - /app/node_modules
-      - /app/.next
     networks:
       - app-network
 

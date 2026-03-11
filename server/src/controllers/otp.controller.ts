@@ -2,6 +2,7 @@ import { Response } from "express";
 import { canRequestOtp, generateOtp, saveOtp } from "../utils/otpStore";
 import { TypedRequest } from "../types/request";
 import { SendOtpBody } from "../validation/auth.schema";
+import { sendUserOtp } from "../lib/otp";
 
 export async function sendOtp(
   req: TypedRequest<{}, SendOtpBody, {}>,
@@ -16,6 +17,7 @@ export async function sendOtp(
 
     const otp = generateOtp();
     saveOtp(phone, otp);
+    await sendUserOtp(phone, otp);
 
     return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {

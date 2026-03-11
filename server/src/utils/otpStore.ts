@@ -8,8 +8,8 @@ const OTP_EXPIRY = 2 * 60 * 1000;
 const otpStore = new Map<string, OTPData>();
 
 export function generateOtp(): string {
-  // return Math.floor(100000 + Math.random() * 900000).toString();
-  return "111111";
+  return Math.floor(100000 + Math.random() * 900000).toString();
+  // return "111111";
 }
 
 export function canRequestOtp(phone: string): boolean {
