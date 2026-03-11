@@ -2,7 +2,7 @@ import { MenuItem } from "@/types/menu";
 import Image from "next/image";
 import Switch from "../ui/Switch";
 import { Pen, Trash2 } from "lucide-react";
-import { deleteMenuItem } from "@/api/menu";
+import useMenu from "@/hooks/useMenu";
 
 export default function MenuItemRow({
   last,
@@ -11,9 +11,7 @@ export default function MenuItemRow({
   last?: boolean;
   item: MenuItem;
 }) {
-  async function handleDeleteItem() {
-    await deleteMenuItem(item.id);
-  }
+  const { deleteItem } = useMenu();
 
   return (
     <>
@@ -61,7 +59,7 @@ export default function MenuItemRow({
             </button>
 
             <button
-              onClick={handleDeleteItem}
+              onClick={() => deleteItem(item.id)}
               className="p-1 border border-gray-300 text-gray-500 rounded-md"
             >
               <Trash2 size={20} />

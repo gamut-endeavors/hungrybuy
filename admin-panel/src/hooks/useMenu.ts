@@ -1,16 +1,24 @@
 "use client";
 
-import { getCategories, getMenu } from "@/api/menu";
+import {
+  createMenuItem,
+  deleteMenuItem,
+  getCategories,
+  getMenu,
+  updateMenuItem,
+} from "@/api/menu";
 import { Category } from "@/types/category";
-import { MenuItem } from "@/types/menu";
-import { useQuery } from "@tanstack/react-query";
+import { MenuFormValue, MenuItem } from "@/types/menu";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 export default function useMenu() {
+  const qc = useQueryClient();
+
   const [category, setCategory] = useState<string>("ALL");
   const [search, setSearch] = useState<string>("");
 
-  const query = useQuery({
+  const menuQuery = useQuery({
     queryKey: ["menu", search],
     queryFn: getMenu,
     select: (data) => data.data.items,
@@ -22,7 +30,7 @@ export default function useMenu() {
     select: (data) => data.data.categories,
   });
 
-  const items: MenuItem[] = query.data ?? [];
+  const items: MenuItem[] = menuQuery.data ?? [];
   const categories: Category[] = categoryQuery.data ?? [];
 
   const filteredItems = useMemo(() => {
@@ -46,18 +54,40 @@ export default function useMenu() {
     };
   }, [items]);
 
+  // -- -- -- MUTATIONS -- -- --
+
+  const createMutation = useMutation({
+    mutationFn: createMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteMenuItem,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu"] }),
+  });
+
+  // -- -- -- ACTIONS -- -- --
+
+  const createItem = (values: MenuFormValue) => createMutation.mutate(values);
+  const deleteItem = (id: string) => deleteMutation.mutate(id);
+
   return {
     items: filteredItems,
-    stats,
     categories,
+    stats,
 
     category,
     setCategory,
-
     search,
     setSearch,
 
-    isLoading: query.isLoading,
-    refetch: query.refetch,
+    createItem,
+    deleteItem,
+
+    creating: createMutation.isPending,
+    deleting: deleteMutation.isPending,
+
+    isLoading: menuQuery.isLoading,
+    refetch: menuQuery.refetch,
   };
 }

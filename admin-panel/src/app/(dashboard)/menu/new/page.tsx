@@ -1,18 +1,12 @@
 "use client";
 
-import { createMenuItem } from "@/api/menu";
 import MenuForm from "@/components/common/MenuForm";
 import Title from "@/components/ui/Title";
 import useMenu from "@/hooks/useMenu";
 import { poppins } from "@/styles/font";
-import { MenuFormValue } from "@/types/menu";
 
 export default function NewMenuPage() {
-  const { categories } = useMenu();
-
-  async function handleSubmit(values: MenuFormValue) {
-    await createMenuItem(values);
-  }
+  const { categories, createItem } = useMenu();
 
   return (
     <>
@@ -22,7 +16,7 @@ export default function NewMenuPage() {
         </div>
 
         <div className="flex justify-center">
-          <MenuForm categories={categories} onSubmit={handleSubmit} />
+          <MenuForm categories={categories} onSubmit={createItem} />
         </div>
       </main>
     </>

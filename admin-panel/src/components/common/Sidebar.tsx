@@ -3,12 +3,12 @@
 import { sidebarItems } from "@/config/sidebar";
 import SidebarItem from "./SidebarItem";
 import Link from "next/link";
-import { ShoppingBag, User } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { poppins } from "@/styles/font";
-import { useAppSelector } from "@/store/hooks";
+import useUser from "@/hooks/useUser";
 
 export default function Sidebar() {
-  const user = useAppSelector((state) => state.auth.user);
+  const { user } = useUser();
 
   return (
     <>
