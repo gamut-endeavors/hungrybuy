@@ -8,7 +8,7 @@ interface InputProps {
   required?: boolean;
   placeholder: string;
   value: string;
-  onChange: (value: any) => void;
+  onChange: (value: string) => void;
   className?: string;
 }
 

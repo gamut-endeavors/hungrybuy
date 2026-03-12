@@ -4,7 +4,7 @@ import OrderRow from "./OrderRow";
 export default function OrderTable({ orders }: { orders: Order[] }) {
   return (
     <>
-      <div className="bg-white border border-b-0 border-slate-400/50 overflow-hidden rounded-3xl">
+      <div className="bg-white border border-slate-400/50 overflow-hidden rounded-3xl">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 border-b border-gray-400/50 text-xs uppercase">
             <tr>
@@ -18,8 +18,12 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
           </thead>
 
           <tbody>
-            {orders.map((order) => (
-              <OrderRow key={order.id} order={order} />
+            {orders.map((order, idx) => (
+              <OrderRow
+                key={order.id}
+                order={order}
+                last={idx === orders.length - 1}
+              />
             ))}
           </tbody>
         </table>
