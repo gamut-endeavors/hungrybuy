@@ -1,8 +1,8 @@
 import { AppDispatch } from "../index";
 import { setAuthLoading, setCredentials, User } from "../slices/authSlice";
 import { api } from "@/lib/api";
-import axios from "axios";
 import { fetchCartAction } from "./cartAction";
+import axios from "axios";
 
 export const initializeAuthAction = () => async (dispatch: AppDispatch) => {
   dispatch(setAuthLoading(true));
@@ -14,7 +14,14 @@ export const initializeAuthAction = () => async (dispatch: AppDispatch) => {
       { withCredentials: true }
     );
 
-    const { accessToken, user } = response.data.data;
+    api.defaults.headers.common["Authorization"] = `Bearer ${response.data.data.accessToken}`;
+
+    const response2 = await api.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+    );
+
+    const { accessToken } = response.data.data;
+    const { user } = response2.data.data;
 
     dispatch(setCredentials({ user, accessToken }));
 

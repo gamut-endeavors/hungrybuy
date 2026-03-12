@@ -5,9 +5,6 @@ import { store } from "../../store/index";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { initializeAuthAction } from "../../store/actions/authAction";
-import { api } from "@/lib/api";
-import { fetchCartAction } from "@/store/actions/cartAction";
-import { AxiosError } from "axios";
 import Loading from "../other/Loading";
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
