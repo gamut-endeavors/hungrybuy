@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "change-host": "bash scripts/change-host.sh"
+  }
+}
