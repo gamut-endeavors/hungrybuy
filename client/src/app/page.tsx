@@ -244,9 +244,6 @@ export default function Home() {
 
   return (
     <main className="h-dvh w-full bg-white relative flex flex-col overflow-hidden">
-      <Suspense fallback={null}>
-        <QRHandler />
-      </Suspense>
 
       <Suspense fallback={null}>
         <HomeSearchHandler
