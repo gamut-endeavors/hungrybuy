@@ -40,7 +40,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!user) {
       const params = new URLSearchParams(window.location.search);
       const urlTable = params.get('table');
 
@@ -52,7 +52,7 @@ export default function Home() {
 
       router.push("/login");
     }
-  }, [isLoading, user, router, tableParam]);
+  }, [user, router, tableParam]);
 
   const { categories, isCategoriesLoading } = useCategories();
 
@@ -81,21 +81,6 @@ export default function Home() {
 
     return filtered;
   }, [allProducts, selectedCategory, dietFilter, sortOrder]);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      const params = new URLSearchParams(window.location.search);
-      const urlTable = params.get('table');
-
-      if (urlTable) {
-        localStorage.setItem("pending_table_scan", urlTable);
-      } else if (tableParam) {
-        localStorage.setItem("pending_table_scan", tableParam);
-      }
-
-      router.push("/login");
-    }
-  }, [isLoading, user, router, tableParam]);
 
   useEffect(() => {
     if (user) {
@@ -155,7 +140,6 @@ export default function Home() {
     }
   }, [selectedCategory]);
 
-  if (isLoading) return <Loading />;
   if (!user) return null;
 
   const getTotalCartCount = () => {
@@ -260,9 +244,6 @@ export default function Home() {
 
   return (
     <main className="h-dvh w-full bg-white relative flex flex-col overflow-hidden">
-      <Suspense fallback={null}>
-        <QRHandler />
-      </Suspense>
 
       <Suspense fallback={null}>
         <HomeSearchHandler

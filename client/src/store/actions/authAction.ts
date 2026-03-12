@@ -1,40 +1,54 @@
 import { AppDispatch } from "../index";
-import { setAuthLoading, setUser, User } from "../slices/authSlice";
+import { setAuthLoading, setCredentials, User } from "../slices/authSlice";
 import { api } from "@/lib/api";
+import { fetchCartAction } from "./cartAction";
+import axios from "axios";
 
 export const initializeAuthAction = () => async (dispatch: AppDispatch) => {
   dispatch(setAuthLoading(true));
 
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      dispatch(setUser(null));
-    }
-  }
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+      {},
+      { withCredentials: true }
+    );
 
-  dispatch(setAuthLoading(false));
+    api.defaults.headers.common["Authorization"] = `Bearer ${response.data.data.accessToken}`;
+
+    const response2 = await api.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+    );
+
+    const { accessToken } = response.data.data;
+    const { user } = response2.data.data;
+
+    dispatch(setCredentials({ user, accessToken }));
+
+    const tableToken = JSON.parse(localStorage.getItem("table") || "null");
+
+    if (tableToken) {
+      api.defaults.headers.common["x-table-token"] = tableToken.token;
+      dispatch(fetchCartAction());
+    }
+  } catch (error) {
+    dispatch(setCredentials(null));
+  } finally {
+    dispatch(setAuthLoading(false));
+  }
 };
 
 export const loginAction = (accessToken: string, userData: User) => async (dispatch: AppDispatch) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-  }
-
-  dispatch(setUser(userData));
+  dispatch(setCredentials({ user: userData, accessToken }));
 };
 
 export const logoutAction = () => async (dispatch: AppDispatch) => {
   try {
-    await api.post("/auth/logout"); 
+    await api.post("/auth/logout");
   } catch (error) {
     console.error("Logout API failed", error);
   } finally {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
-    }
-    dispatch(setUser(null));
-    window.location.href = "/"; 
+    dispatch(setCredentials(null));
+    window.location.href = "/";
   }
 };

@@ -1,4 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { store } from "@/store/index";
+import { setCredentials } from "@/store/slices/authSlice";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -36,7 +38,9 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const state = store.getState();
+  const token = state.auth.accessToken;
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -46,28 +50,26 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<{ message: string }>) => {
-
-
+    const originalRequest = error.config as CustomAxiosRequestConfig;
     const errorMessage = error.response?.data?.message;
+
     if (
+      !originalRequest.url?.includes("/table/verify") &&
       error.response?.status === 401 &&
       (errorMessage === "Invalid or expired table session token" ||
         errorMessage === "Table session token invalid")
     ) {
-
       localStorage.removeItem("table");
       window.location.href = "/";
-
       return Promise.reject(error);
     }
-
-    const originalRequest = error.config as CustomAxiosRequestConfig;
 
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url?.includes("/auth/login") &&
-      !originalRequest.url?.includes("/auth/refresh")
+      !originalRequest.url?.includes("/auth/refresh") &&
+      !originalRequest.url?.includes("/table/verify")
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -92,7 +94,11 @@ api.interceptors.response.use(
 
         const { accessToken } = res.data.data;
 
-        localStorage.setItem("accessToken", accessToken);
+        const currentUser = store.getState().auth.user;
+
+        if (currentUser) {
+          store.dispatch(setCredentials({ user: currentUser, accessToken }));
+        }
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
@@ -104,6 +110,7 @@ api.interceptors.response.use(
         processQueue(errorResponse, null);
         isRefreshing = false;
 
+        store.dispatch(setCredentials(null));
         localStorage.clear();
         window.location.href = "/login";
         return Promise.reject(refreshError);
