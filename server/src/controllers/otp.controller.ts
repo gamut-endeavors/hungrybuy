@@ -17,7 +17,7 @@ export async function sendOtp(
 
     const otp = generateOtp();
     saveOtp(phone, otp);
-    await sendUserOtp(phone, otp);
+    // await sendUserOtp(phone, otp);
 
     return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
