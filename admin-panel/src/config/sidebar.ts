@@ -4,6 +4,7 @@ import {
   LucideIcon,
   Settings,
   Table,
+  User,
   UtensilsCrossed,
 } from "lucide-react";
 
@@ -33,6 +34,11 @@ export const sidebarItems: SidebarItem[] = [
     label: "Analytics",
     path: "/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Profile",
+    path: "/profile",
+    icon: User,
   },
   {
     label: "Settings",

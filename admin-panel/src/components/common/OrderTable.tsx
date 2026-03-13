@@ -6,7 +6,9 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
     <>
       <div className="bg-white border border-slate-400/50 overflow-hidden rounded-3xl">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 border-b border-gray-400/50 text-xs uppercase">
+          <thead
+            className={`bg-gray-50 text-gray-500 ${orders.length > 0 ? "border-b" : ""} border-gray-400/50 text-xs uppercase`}
+          >
             <tr>
               <th className="p-5 text-left">Table No.</th>
               <th className="p-5 text-left">Order ID</th>
