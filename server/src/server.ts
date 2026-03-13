@@ -2,6 +2,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import compression from "compression";
+import helmet from "helmet";
 import path from "path";
 import { httpLogger } from "./lib/httpLogger";
 import { attachUserMiddleware } from "./middlewares/user.middleware";
@@ -26,6 +28,9 @@ export function startServer() {
   initSocket(server);
 
   app.disable("x-powered-by");
+
+  app.use(compression());
+  app.use(helmet());
 
   app.use(
     cors({

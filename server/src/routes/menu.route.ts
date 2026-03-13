@@ -9,7 +9,7 @@ import {
   updateMenuItem,
   updateVariant,
 } from "../controllers/menu.controller";
-import { upload } from "../utils/upload";
+import { upload, validateImageSignature } from "../utils/upload";
 import { requireRole } from "../middlewares/role.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import {
@@ -39,6 +39,7 @@ router.post(
   "/create",
   requireRole(["RESTAURANT_OWNER"]),
   upload.single("image"),
+  validateImageSignature,
   validate(CreateMenuBody),
   resolveTenant,
   createMenuItem,
@@ -48,6 +49,7 @@ router.patch(
   "/:id",
   requireRole(["RESTAURANT_OWNER"]),
   upload.single("image"),
+  validateImageSignature,
   validate(UpdateMenuItemParams, "params"),
   validate(UpdateMenuItemsBody),
   resolveTenant,

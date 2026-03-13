@@ -13,7 +13,7 @@ import {
   UpdateCategoryBody,
   UpdateCategoryParams,
 } from "../validation/category.schema";
-import { upload } from "../utils/upload";
+import { upload, validateImageSignature } from "../utils/upload";
 import { resolveTenant } from "../middlewares/restaurant.middleware";
 
 const router = Router();
@@ -29,6 +29,7 @@ router.post(
   "/create",
   requireRole(["RESTAURANT_OWNER"]),
   upload.single("image"),
+  validateImageSignature,
   validate(CreateCategoryBody),
   resolveTenant,
   createCategory,
@@ -38,6 +39,7 @@ router.patch(
   "/:id",
   requireRole(["RESTAURANT_OWNER"]),
   upload.single("image"),
+  validateImageSignature,
   validate(UpdateCategoryParams, "params"),
   validate(UpdateCategoryBody),
   resolveTenant,
