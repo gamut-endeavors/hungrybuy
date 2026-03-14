@@ -1,11 +1,14 @@
-import { getOrders } from "@/api/order";
+import { getOrders, updatedOrderStatus } from "@/api/order";
+import { socket } from "@/lib/socket";
 import { Order, OrderStatus } from "@/types/order";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 
 const EMPTY_ORDERS: Order[] = [];
 
 export default function useOrder() {
+  const qc = new QueryClient();
+
   const [statusFilter, setStatusFilter] = useState<OrderStatus>("ALL");
   const [sortBy, setSortBy] = useState<"price">("price");
 
@@ -27,6 +30,26 @@ export default function useOrder() {
     return result;
   }, [orders, statusFilter]);
 
+  useEffect(() => {
+    function handleNewOrder(order: Order) {
+      qc.setQueryData<Order[]>(["orders"], (old = []) => [order, ...old]);
+    }
+
+    socket.on("order:new", handleNewOrder);
+
+    return () => {
+      socket.off("order:new", handleNewOrder);
+    };
+  }, [qc]);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: updatedOrderStatus,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders"] }),
+  });
+
+  const updateStatus = (payload: { id: string; status: OrderStatus }) =>
+    updateStatusMutation.mutate({ id: payload.id, status: payload.status });
+
   const stats = useMemo(() => {
     return {
       pending: orders.filter((order) => order.status === "PENDING").length,
@@ -42,12 +65,12 @@ export default function useOrder() {
   return {
     orders: filteredOrders,
     stats,
-
     statusFilter,
-    setStatusFilter,
-
     sortBy,
+
+    setStatusFilter,
     setSortBy,
+    updateStatus,
 
     isLoading: query.isLoading,
     refetch: query.refetch,

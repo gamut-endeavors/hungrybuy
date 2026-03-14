@@ -8,7 +8,9 @@ export const UpdateOrderParams = z.object({
 export type UpdateOrderParams = z.infer<typeof UpdateOrderParams>;
 
 export const UpdateOrderStatusBody = z.object({
-  status: z.enum(["PENDING", "CANCELLED", "SERVED", "PAID"]).optional(),
+  status: z
+    .enum(["PENDING", "PREPARING", "READY", "CANCELLED", "SERVED", "PAID"])
+    .optional(),
 });
 
 export type UpdateOrderStatusBody = z.infer<typeof UpdateOrderStatusBody>;

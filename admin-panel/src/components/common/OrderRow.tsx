@@ -26,7 +26,7 @@ export default function OrderRow({
         <td className="px-4 py-4 font-medium">${order.totalAmount}</td>
 
         <td className="px-4 py-4">
-          <StatusDropdown status={order.status} />
+          <StatusDropdown id={order.id} status={order.status} />
         </td>
 
         <td className="px-4 py-4 text-orange-500 font-medium cursor-pointer">
