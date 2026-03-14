@@ -21,6 +21,9 @@ export async function getUser(req: TypedRequest, res: Response) {
       select: {
         name: true,
         phone: true,
+        email: true,
+        role: true,
+        createdAt: true,
       },
     });
 

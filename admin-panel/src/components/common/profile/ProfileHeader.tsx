@@ -1,6 +1,7 @@
 "use client";
 
 import useUser from "@/hooks/useUser";
+import { formatMonthYear } from "@/utils/date";
 import { LucideIcon, Mail, MapPin, Pen, Phone, ShieldUser } from "lucide-react";
 import Image from "next/image";
 
@@ -35,7 +36,10 @@ export default function ProfileHeader() {
               <h2 className="text-x font-semibold">{user.name}</h2>
 
               <p className="text-gray-500">
-                Super Admin • Member since March 2021
+                Super Admin • Member since{" "}
+                {String(
+                  user.createdAt && formatMonthYear(new Date(user.createdAt)),
+                )}
               </p>
             </div>
 
@@ -44,11 +48,11 @@ export default function ProfileHeader() {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-4 gap-4 border border-gray-200 bg-gray-50 rounded-xl p-4">
-            <Info icon={Mail} label="Email" value="sarah.j@hungrybuy.com" />
-            <Info icon={ShieldUser} label="Role" value="Administrator" />
-            <Info icon={Phone} label="Phone" value="+1 (555) 012-3456" />
-            <Info icon={MapPin} label="Location" value="New York, NY" />
+          <div className="mt-4 grid grid-cols-2 gap-4 border border-gray-200 bg-gray-50 rounded-xl p-4">
+            <Info icon={Mail} label="Email" value={user.email!} />
+            <Info icon={ShieldUser} label="Role" value={user.role!} />
+            <Info icon={Phone} label="Phone" value={user.phone!} />
+            <Info icon={MapPin} label="Location" value={user.avatar!} />
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ export default function SecurityCard() {
         <div className="mb-8 flex justify-between">
           <h3 className="font-semibold text-xl">Security</h3>
 
-          <LockKeyhole fill="#99a1af" color="white" />
+          <LockKeyhole color="#99a1af" />
         </div>
 
         <hr className="my-7 text-gray-300" />

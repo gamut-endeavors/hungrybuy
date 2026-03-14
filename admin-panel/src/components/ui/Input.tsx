@@ -1,8 +1,9 @@
 import { LucideIcon } from "lucide-react";
 
 interface InputProps {
+  name?: string;
   label: string;
-  autoComplete: string;
+  autoComplete?: string;
   type?: string;
   icon?: LucideIcon;
   required?: boolean;
@@ -13,6 +14,7 @@ interface InputProps {
 }
 
 export default function Input({
+  name,
   label,
   type = "text",
   autoComplete,
@@ -38,6 +40,7 @@ export default function Input({
           )}
 
           <input
+            name={name}
             type={type}
             autoComplete={autoComplete}
             required={required}

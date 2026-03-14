@@ -1,47 +1,75 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import useUser from "@/hooks/useUser";
+import { User } from "@/types/user";
 import { UserCog2 } from "lucide-react";
+import { useState } from "react";
 
-export default function AccountDetails() {
+interface FormState {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export default function AccountDetails({ user }: { user: User }) {
+  if (!user) return null;
+
+  const [form, setForm] = useState<FormState>({
+    name: user.name ?? "",
+    email: user.email ?? "",
+    phone: user.phone ?? "",
+  });
+
+  const handleChange = (field: keyof FormState) => {
+    return (value: string) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    };
+  };
+
   return (
     <>
       <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
         <div className="mb-8 flex justify-between">
           <h3 className="font-semibold text-xl">Account Details</h3>
 
-          <UserCog2 />
+          <UserCog2 color="#99a1af" />
         </div>
 
         <hr className="my-7 text-gray-300" />
 
-        <div className="flex flex-col">
+        <form className="flex flex-col">
           <div className="grid md:grid-cols-2 gap-2">
             <Input
+              name="name"
               label="Name"
-              value=""
-              onChange={() => null}
+              value={form.name}
+              onChange={handleChange("name")}
               placeholder=""
-              autoComplete=""
             />
 
             <Input
+              name="email"
               label="Email"
-              value=""
-              onChange={() => null}
+              value={form.email}
+              onChange={handleChange("email")}
               placeholder=""
-              autoComplete=""
             />
           </div>
 
           <Input
+            name="phone"
             label="Phone Number"
-            value=""
-            onChange={() => null}
+            value={form.phone}
+            onChange={handleChange("phone")}
             placeholder=""
-            autoComplete=""
           />
-        </div>
+
+          <Button type="submit" disabled={false}>
+            Save
+          </Button>
+        </form>
       </div>
     </>
   );

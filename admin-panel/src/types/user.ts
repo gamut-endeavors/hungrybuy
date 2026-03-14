@@ -1,4 +1,9 @@
 export interface User {
+  id: number;
   name: string;
-  phone: string;
+  email?: string;
+  phone?: string;
+  avatar?: string;
+  role?: string;
+  createdAt?: Date;
 }

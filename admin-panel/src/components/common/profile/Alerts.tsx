@@ -7,7 +7,7 @@ export default function Alerts() {
         <div className="mb-8 flex justify-between">
           <h3 className="font-semibold text-xl">Alerts</h3>
 
-          <BellRing fill="#99a1af" color="white" />
+          <BellRing color="#99a1af" />
         </div>
 
         <hr className="my-7 text-gray-300" />
