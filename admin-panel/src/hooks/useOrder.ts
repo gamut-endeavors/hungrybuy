@@ -1,13 +1,13 @@
 import { getOrders, updatedOrderStatus } from "@/api/order";
 import { socket } from "@/lib/socket";
 import { Order, OrderStatus } from "@/types/order";
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 const EMPTY_ORDERS: Order[] = [];
 
 export default function useOrder() {
-  const qc = new QueryClient();
+  const qc = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>("ALL");
   const [sortBy, setSortBy] = useState<"price">("price");
