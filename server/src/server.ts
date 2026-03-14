@@ -34,7 +34,11 @@ export function startServer() {
 
   app.use(
     cors({
-      origin: [process.env.FRONTEND_URL!, process.env.ADMIN_URL!, "http://localhost:3001"],
+      origin: [
+        process.env.FRONTEND_URL!,
+        process.env.ADMIN_URL!,
+        "http://localhost:3001",
+      ],
       credentials: true,
     }),
   );

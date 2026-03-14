@@ -10,7 +10,11 @@ export let io: Server;
 export async function initSocket(server: any) {
   io = new Server(server, {
     cors: {
-      origin: [process.env.FRONTEND_URL!, process.env.ADMIN_URL!],
+      origin: [
+        process.env.FRONTEND_URL!,
+        process.env.ADMIN_URL!,
+        "http://localhost:3001",
+      ],
       methods: ["GET", "POST"],
       credentials: true,
     },

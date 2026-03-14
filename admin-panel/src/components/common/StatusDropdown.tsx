@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { OrderStatus } from "@/types/order";
+import useOrder from "@/hooks/useOrder";
 
-export default function StatusDropdown({ status }: { status: OrderStatus }) {
+export default function StatusDropdown({
+  id,
+  status,
+}: {
+  id: string;
+  status: OrderStatus;
+}) {
+  const { updateStatus } = useOrder();
+
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(status);
 
   const styles: Record<OrderStatus, string> = {
@@ -16,10 +25,17 @@ export default function StatusDropdown({ status }: { status: OrderStatus }) {
     PAID: "bg-emerald-100 text-emerald-700 border-emerald-200",
   };
 
+  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value as OrderStatus;
+    setCurrentStatus(newStatus);
+
+    updateStatus({ id, status: newStatus });
+  };
+
   return (
     <select
       value={currentStatus}
-      onChange={(e) => setCurrentStatus(e.target.value as OrderStatus)}
+      onChange={handleChange}
       className={`px-3 py-1 outline-none rounded-md text-sm font-medium border ${styles[currentStatus]}`}
     >
       <option className="text-blue-700" value="PENDING">
