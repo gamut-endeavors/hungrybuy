@@ -68,7 +68,7 @@ services:
 
   admin:
     build:
-      context: ./admin
+      context: ./admin-panel
       dockerfile: Dockerfile.dev
     container_name: hungrybuy-admin-dev
     command: npm run dev
