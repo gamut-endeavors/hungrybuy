@@ -75,7 +75,8 @@ export async function createMenuItem(
 ) {
   try {
     const { id: restaurantId } = req.restaurant!;
-    const { name, price, foodType, categoryId, description } = req.body;
+    const { name, price, foodType, categoryId, description, variants } =
+      req.body;
 
     const category = await prisma.category.findUnique({
       where: { id: categoryId, restaurantId },
@@ -91,26 +92,30 @@ export async function createMenuItem(
       image = `/uploads/${req.file.filename}`;
     }
 
-    const item = await prisma.menuItem.create({
-      data: {
-        name,
-        description: description ?? "",
-        price: price !== undefined ? new Prisma.Decimal(price) : null,
-        foodType,
-        categoryId,
-        image,
-        restaurantId,
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        image: true,
-        foodType: true,
-        isAvailable: true,
-        categoryId: true,
-      },
+    const item = await prisma.$transaction(async (tx) => {
+      const createdItem = await tx.menuItem.create({
+        data: {
+          name,
+          description: description ?? "",
+          price: price !== undefined ? new Prisma.Decimal(price) : null,
+          foodType,
+          categoryId,
+          image,
+          restaurantId,
+        },
+      });
+
+      if (variants && variants.length > 0) {
+        await tx.menuVariant.createMany({
+          data: variants.map((v) => ({
+            label: v.label,
+            price: new Prisma.Decimal(v.price),
+            menuItemId: createdItem.id,
+          })),
+        });
+      }
+
+      return createdItem;
     });
 
     return res

@@ -13,7 +13,7 @@ export async function initSocket(server: any) {
       origin: [
         process.env.FRONTEND_URL!,
         process.env.ADMIN_URL!,
-        "http://localhost:3001",
+        "http://172.21.34.122:3001",
       ],
       methods: ["GET", "POST"],
       credentials: true,

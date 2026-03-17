@@ -6,6 +6,15 @@ export const CreateMenuBody = z.object({
   foodType: z.enum(["VEG", "NON_VEG"]),
   categoryId: z.uuidv4(),
   price: z.coerce.number().min(0).max(100000).optional(),
+
+  variants: z
+    .array(
+      z.object({
+        label: z.string().trim().min(1).max(10),
+        price: z.coerce.number().min(0).max(10000),
+      }),
+    )
+    .optional(),
 });
 
 export type CreateMenuBody = z.infer<typeof CreateMenuBody>;

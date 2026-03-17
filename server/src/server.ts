@@ -37,7 +37,7 @@ export function startServer() {
       origin: [
         process.env.FRONTEND_URL!,
         process.env.ADMIN_URL!,
-        "http://localhost:3001",
+        "http://172.21.34.122:3001",
       ],
       credentials: true,
     }),

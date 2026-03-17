@@ -38,6 +38,7 @@ export default function MenuEditPage() {
               categoryId: menuItem?.category.id,
               foodType: menuItem?.foodType,
               image: null,
+              variants: menuItem?.variants,
             }}
             onSubmit={handleSubmit}
           />

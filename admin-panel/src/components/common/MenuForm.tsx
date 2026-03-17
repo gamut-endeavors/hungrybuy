@@ -20,6 +20,7 @@ const initialValues: MenuFormValue = {
   categoryId: "",
   foodType: "VEG",
   image: null,
+  variants: [],
 };
 
 export default function MenuForm({
@@ -32,6 +33,33 @@ export default function MenuForm({
   const [values, setValues] = useState<MenuFormValue>(
     () => defaultValues ?? initialValues,
   );
+
+  function addVariant() {
+    setValues((prev) => ({
+      ...prev,
+      variants: [...prev.variants, { label: "", price: 0 }],
+    }));
+  }
+
+  function removeVariant(index: number) {
+    setValues((prev) => ({
+      ...prev,
+      variants: prev.variants.filter((_, idx) => idx !== index),
+    }));
+  }
+
+  function updateVariant(
+    index: number,
+    key: "label" | "price",
+    value: string | number,
+  ) {
+    setValues((prev) => ({
+      ...prev,
+      variants: prev.variants.map((variant, idx) =>
+        idx === index ? { ...variant, [key]: value } : variant,
+      ),
+    }));
+  }
 
   function handleChange(
     key: keyof MenuFormValue,
@@ -168,6 +196,66 @@ export default function MenuForm({
             onChange={(e) => handleChange("image", e.target.files?.[0] ?? null)}
           />
         </label>
+      </div>
+
+      <div className="pt-5">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <p className="font-semibold">Menu Variants</p>
+            <p className="text-sm text-gray-400">
+              Offer different sizes or options for this item.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={addVariant}
+            className="px-3 py-1 bg-orange-100 text-orange-600 rounded-lg text-sm"
+          >
+            + Add Variant
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {values.variants &&
+            values.variants.map((variant, idx) => (
+              <div
+                key={idx}
+                className="bg-gray-50 p-4 rounded-xl flex gap-3 items-end"
+              >
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400">Label</label>
+                  <input
+                    value={variant.label}
+                    onChange={(e) =>
+                      updateVariant(idx, "label", e.target.value)
+                    }
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg"
+                  />
+                </div>
+
+                <div className="w-40">
+                  <label className="text-xs text-gray-400">Price</label>
+                  <input
+                    type="string"
+                    value={variant.price}
+                    onChange={(e) =>
+                      updateVariant(idx, "price", Number(e.target.value))
+                    }
+                    className="w-full h-10 px-3 border border-gray-200 rounded-lg"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeVariant(idx)}
+                  className="p-2 text-gray-500"
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+        </div>
       </div>
 
       <div className="flex justify-end items-center gap-6 mt-2">

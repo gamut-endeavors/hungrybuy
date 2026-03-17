@@ -17,7 +17,12 @@ export interface MenuItem {
   foodType: FoodType;
   isAvailable: boolean;
   category: Category;
-  variants: Variant;
+  variants: Variant[];
+}
+
+export interface MenuVariantForm {
+  label: string;
+  price: number;
 }
 
 export interface MenuFormValue {
@@ -27,4 +32,5 @@ export interface MenuFormValue {
   foodType: FoodType;
   categoryId: string;
   image: File | null;
+  variants: MenuVariantForm[];
 }
